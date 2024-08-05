@@ -1,0 +1,27 @@
+import { useContext } from "react";
+import TUDLogo from "../assets/TUDelft_logo_black.png";
+import { StateContext } from "../StateProvider";
+
+const Completion = () => {
+    // @ts-expect-error
+    const {globalState, setGlobalState} = useContext(StateContext);
+    console.log(globalState);
+    return (
+        <div className="flex flex-col h-full w-full justify-center items-start">
+            <nav className="flex w-full justify-start p-4">
+                <img className="h-10" src={TUDLogo} alt="TU Delft" />
+            </nav>
+            <div className="flex flex-col w-full h-full items-center justify-center gap-y-4">
+                <h1 className="font-semibold text-2xl">Study Completed🥳!</h1>
+                <p>
+                Thank you for completing the study! Any time spent on the study will be compensated on Prolific.
+                </p>
+                <p>
+                    You can close this window now. If you have any questions, please contact us through the Prolific platform.
+                </p>
+            </div>
+        </div>
+    );
+};
+
+export default Completion;
