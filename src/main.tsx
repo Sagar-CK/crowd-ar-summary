@@ -7,6 +7,8 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import Cond1 from './pages/Cond1.tsx';
+import Cond2 from './pages/Cond2.tsx';
+import Cond3 from './pages/Cond3.tsx';
 import RevokedConsent from './pages/RevokedConsent.tsx';
 import StateProvider from './StateProvider.tsx';
 import { RedirectToCondition } from './components/RedirectToCondition.tsx';
@@ -24,6 +26,18 @@ const router = createBrowserRouter([
     path: "/cond1",
     element: <Layout>
       <Cond1 />
+    </Layout>
+  },
+  {
+    path: "/cond2",
+    element: <Layout>
+      <Cond2 />
+    </Layout>
+  },
+  {
+    path: "/cond3",
+    element: <Layout>
+      <Cond3 />
     </Layout>
   },
   {
