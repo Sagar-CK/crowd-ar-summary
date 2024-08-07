@@ -21,6 +21,7 @@ const Cond1 = () => {
             <PreTask
                 globalState={globalState}
                 setGlobalState={setGlobalState}
+                condition={1}
             />
         );
 
