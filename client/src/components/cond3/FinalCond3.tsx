@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { sampleArticle } from "../../data/Mocked";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { LLMUrl, baseUrl, calculateWordCount } from "../../utils/Helper";
@@ -27,12 +26,23 @@ export const FinalCond3 = () => {
         },
     })
 
+
+    const { isPending, error, data } = useQuery({
+        queryKey: ['finalSummary'],
+        queryFn: async () => {
+            const res = await fetch(`${baseUrl}/api/users/${prolificID}`)
+
+            return await res.json();
+        }
+    })
+
+
     const submitQueryToLLM = useMutation({
         mutationFn: ({ query }: { query: string }) => {
             // Define the system message separately for clarity
             const systemMessage = {
                 role: "system",
-                content: `You are an expert assistant helping the user understand and interact with the provided content. The user has access to an article, which you can reference to answer questions, provide explanations, or elaborate on topics. This is the article: ${sampleArticle}. Use your knowledge and the article to give accurate and detailed responses. If relevant, refer directly to sections of the article. If the information is not available in the article, use your general knowledge to help the user effectively. Below is the conversation history between the user and the assistant. Always focus your response to the latest user query.`,
+                content: `You are an expert assistant helping the user understand and interact with the provided content. The user has access to an article, which you can reference to answer questions, provide explanations, or elaborate on topics. This is the article: ${data.article}. Use your knowledge and the article to give accurate and detailed responses. If relevant, refer directly to sections of the article. If the information is not available in the article, use your general knowledge to help the user effectively. Below is the conversation history between the user and the assistant. Always focus your response to the latest user query.`,
             };
 
             // Map the query history into the message format expected by the LLM
@@ -55,15 +65,6 @@ export const FinalCond3 = () => {
         }
     });
 
-
-    const { isPending, error, data } = useQuery({
-        queryKey: ['finalSummary'],
-        queryFn: async () => {
-            const res = await fetch(`${baseUrl}/api/users/${prolificID}`)
-
-            return await res.json();
-        }
-    })
 
     useEffect(() => {
         setWordCount(calculateWordCount(summary));
@@ -140,7 +141,7 @@ export const FinalCond3 = () => {
                 <div id='article-container' className="flex flex-col justify-start items-center w-1/3 h-full text-wrap p-4">
                     <div className="flex flex-col items-center p-4 bg-gray-200 drop-shadow-md rounded-xl overflow-auto">
                         <h1 className="font-semibold text-xl">Article</h1>
-                        <p>{sampleArticle}</p>
+                        <p>{data.article}</p>
                     </div>
                 </div>
                 <div id="summary-submission-container" className="flex flex-col justify-center w-2/3 h-full">

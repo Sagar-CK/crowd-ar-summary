@@ -1,6 +1,49 @@
 import { RequestHandler } from "express";
 import UserModel from "../models/user";
 import createHttpError from "http-errors";
+import fs from 'fs';
+import path from 'path';
+import csv from 'csv-parser';
+
+// Load and parse the dataset
+const datasetPath = path.join(__dirname, '../data/selected_articles.csv'); // Update the path to your dataset
+// Initialize dataset and used articles
+const articles: { id: string; article: string; highlights: string; llm_summary: string;}[] = [];
+const usedArticles: Set<string> = new Set();
+let currentIndex = 0;
+
+const loadDataset = async () => {
+    return new Promise<void>((resolve, reject) => {
+        fs.createReadStream(datasetPath)
+            .pipe(csv())
+            .on('data', (row) => {
+                // Push each row to the articles array
+                articles.push({
+                    id: row.id,
+                    article: row.article,
+                    highlights: row.highlights,
+                    llm_summary: row.llm_summary
+                });
+            })
+            .on('end', () => {
+                resolve();
+            })
+            .on('error', (error) => {
+                reject(error);
+            });
+    });
+};
+
+// Initialize the dataset
+(async () => {
+    try {
+        await loadDataset();
+        console.log('Dataset loaded successfully');
+    } catch (error) {
+        console.error('Error loading dataset:', error);
+    }
+})();
+
 
 interface CreateUserBody {
     prolificID?: string,
@@ -33,27 +76,54 @@ export const getUser: RequestHandler = async (req, res, next) => {
     }
 }
 
-
 export const createUser: RequestHandler<unknown, unknown, CreateUserBody, unknown> = async (req, res, next) => {
     const prolificID = req.body.prolificID;
     const preTask = req.body.preTask;
     const condition = req.body.condition;
 
     try {
-
-        if(!prolificID) createHttpError(400, "User needs a prolificID!")
+        if (!prolificID) {
+            throw createHttpError(400, "User needs a prolificID!");
+        }
 
         // Check if the user already exists
         const user = await UserModel.findOne({ prolificID: prolificID }).exec();
         if (user) {
-            return;
+            return res.status(200).json(user); // User already exists
         }
 
+        // Find the next available article
+        if (currentIndex >= articles.length) {
+            throw createHttpError(500, "No more articles available.");
+        }
+
+        let assignedArticle = articles[currentIndex];
+        while (usedArticles.has(assignedArticle.id)) {
+            currentIndex++;
+            if (currentIndex >= articles.length) {
+                throw createHttpError(500, "No more articles available.");
+            }
+            assignedArticle = articles[currentIndex];
+        }
+
+        usedArticles.add(assignedArticle.id);
+        currentIndex++;
+
+        // if condition 1 add the llm summary
+        let llmSummary = "";
+        if (condition === 1) {
+            llmSummary = assignedArticle.llm_summary;
+        }
+
+        // Create new user
         const newUser = await UserModel.create({
             prolificID: prolificID,
             preTask: preTask,
             condition: condition,
-        })
+            article: assignedArticle.article, // Add the assigned article
+            articleID: assignedArticle.id,      // Add the article ID
+            llmSummary: llmSummary
+        });
 
         res.status(201).json(newUser);
     } catch (error) {

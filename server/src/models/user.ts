@@ -4,6 +4,7 @@ const userSchema = new Schema({
     prolificID: {type: String, required: true},
     condition: {type: Number, required: true},
     articleID: {type: String},
+    article: {type: String},
     preTask: {type: Boolean},
     task: {type: Boolean},
     postTask: {type: Boolean},

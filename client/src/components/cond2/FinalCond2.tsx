@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { sampleArticle } from "../../data/Mocked";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { baseUrl, calculateWordCount } from "../../utils/Helper";
@@ -81,7 +80,7 @@ export const FinalCond2 = ({ loading }: FinalCond2Props) => {
                     <div className="flex flex-col items-center p-4 bg-gray-200 rounded-xl overflow-auto ">
                         <h1 className="font-semibold text-xl">Article</h1>
                         <p>
-                            {sampleArticle}
+                            {data.article}
                         </p>
                     </div>
                 </div>

@@ -2,19 +2,17 @@
 Code repository for the experimental design setup for my Bachelor's Honors Project.
 
 # Miscellaneous Notes
-- Ensure that the Qualtrics includes labels under the 1/7 scales.
+- Add error handling everywhere!
 
 # Client TODO
-- Valid Completion Code
-- Revoked Consent Completion Code
 - Timed Out Completion Code (+ functionality)
 - Add a global timer that will time out the user after 30 minutes.
-- Make sure that loading for llm summary occurs on the second page.
+- Propogate LLM summaries for condition 1 properly.
+- Replace calls to LLM on frontend with calls to the server.
 
 # Server TODO
-- Ensure for all conditions that the article is randomly selected from ``client/data/selected_articles.csv``. Make sure ``articleID`` is propogated to the backend (so we know what reference summary to use). 
-
+- Ensure that the server keeps track of the articles that have been given to users. (For reruns if people back out)
 
 # External Service TODO
-- Unfortunately, the LLM's response times are quite slow. We need to ensure that the response times are reasonable.
-- Ensure the cluster is scalable for 60 users? (maybe 5 is okay)
+- Parallelize the LLM calls to Ollama.
+- Create FastAPI/Flask server to expose the LLM API to the internet.

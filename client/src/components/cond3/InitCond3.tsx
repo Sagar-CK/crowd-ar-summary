@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { sampleArticle } from "../../data/Mocked";
 import { LLMUrl, baseUrl, calculateWordCount } from "../../utils/Helper";
 import { useSearchParams } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Query } from "../../types/User";
 import { Button } from "antd";
@@ -16,6 +15,20 @@ export const InitCond3 = () => {
     const queryClient = useQueryClient();
 
     const prolificID = searchParams.get("prolificID");
+
+    
+    const { isPending, error, data } = useQuery({
+        queryKey: ['initSummary', prolificID],
+        queryFn: async () => {
+            const res = await fetch(`${baseUrl}/api/users/${prolificID}`)
+            if (!res.ok) {
+                throw new Error('Network response was not ok');
+            }
+            console.log("I have been called");
+            return await res.json();
+        }
+    })
+
 
 
     const addInitialSummary = useMutation({
@@ -31,7 +44,7 @@ export const InitCond3 = () => {
                 messages: [
                     {
                         role: "user",
-                        content: `Summarize the following text in 100-150 words: ${sampleArticle}  Ensure the summary captures the main points and key details. Return only the summary in the response.`
+                        content: `Summarize the following text in 100-150 words: ${data.article}  Ensure the summary captures the main points and key details. Return only the summary in the response.`
                     }
                 ],
                 stream: false,
@@ -62,13 +75,30 @@ export const InitCond3 = () => {
         })
     };
 
+    if (isPending || !data) {
+        return (
+            <div className="flex h-full w-full items-center justify-center">
+                Fetching your response!
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex h-full w-full items-center justify-center">
+                Something went wrong.
+            </div>
+        );
+    }
+
+
     return (
         <div className="flex flex-col h-full w-full justify-start items-center gap-y-4 overflow-x-hidden text-sm">
             <div id="summary-article-container" className="flex justify-center w-5/6 h-2/3 gap-x-4">
                 <div id='article-container' className="flex flex-col justify-center items-center bg-gray-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                     <h1 className="font-semibold text-xl">Article</h1>
                     <p className="overflow-y-scroll">
-                        {sampleArticle}
+                        {data.article}
                     </p>
                 </div>
             </div>

@@ -1,3 +1,5 @@
+import { Button } from "antd";
+
 const Completion = () => {
     return (
         <div className="flex flex-col h-full w-full justify-center items-start">
@@ -7,8 +9,9 @@ const Completion = () => {
                 Thank you for completing the study! Any time spent on the study will be compensated on Prolific.
                 </p>
                 <p>
-                    You can close this window now. If you have any questions, please contact us through the Prolific platform.
+                    You can now click the button below to be redirected to the Prolific platform and receive compensation. If you have any questions, please contact us through the Prolific platform.
                 </p>
+                <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=C1HHGHSJ"}>Go to Prolific</Button>
             </div>
         </div>
     );

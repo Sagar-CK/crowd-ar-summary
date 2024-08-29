@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { sampleLLMSummary, sampleArticle } from "../../data/Mocked";
 import { baseUrl, calculateWordCount } from "../../utils/Helper";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "antd";
@@ -19,10 +18,43 @@ export const LLMHuman = () => {
         },
       })
 
-
+      
     useEffect(() => {
         setWordCount(calculateWordCount(summary))
     }, [summary]);
+
+
+      const { isPending, error, data } = useQuery({
+        queryKey: ['cond1task'],
+        queryFn: async () => {
+            try {
+                const res = await fetch(`${baseUrl}/api/users/${prolificID}`)
+                return await res.json();
+            }
+            catch (e) {
+                throw Error("not defined.")
+            }
+
+        }
+    })
+
+
+    if (isPending || !data) {
+        return (
+            <div className="flex h-full w-full items-center justify-center">
+                Fetching your response!
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex h-full w-full items-center justify-center">
+                Something went wrong.
+            </div>
+        );
+    }
+
 
     const handleProceed = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -41,13 +73,13 @@ export const LLMHuman = () => {
                 <div id='article-container' className="flex flex-col justify-center items-center bg-gray-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                     <h1 className="font-semibold text-2xl">Article</h1>
                     <p className="overflow-y-scroll">
-                        {sampleArticle}
+                        {data.article}
                     </p>
                 </div>
                 <div id='summary-container' className="flex flex-col justify-start items-center bg-green-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                     <h1 className="font-semibold text-2xl">LLM Summary</h1>
                     <p className="overflow-y-auto">
-                        {sampleLLMSummary}
+                        {data.llmSummary}
                     </p>
                 </div>
             </div>

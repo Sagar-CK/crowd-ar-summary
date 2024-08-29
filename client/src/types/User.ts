@@ -1,6 +1,7 @@
 export type User = {
     prolificID: string;
     articleID?: string;
+    article?: string;
     preTask?: boolean;
     task?: boolean;
     postTask?: boolean;

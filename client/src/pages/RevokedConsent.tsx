@@ -1,3 +1,4 @@
+import { Button } from "antd";
 import TUDLogo from "../assets/TUDelft_logo_black.png";
 const RevokedConsent = () => {;
     return (
@@ -12,8 +13,9 @@ const RevokedConsent = () => {;
                     will be discarded and any time spent will be compensated on Prolific.
                 </p>
                 <p>
-                    You can close this window now. If you have any questions, please contact us through the Prolific platform.
+                    You can click the button below to be redirected to the Prolific Platform to be compensated. If you have any questions, please contact us through the Prolific platform.
                 </p>
+                <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=C1CCE19H"}>Go to Prolific</Button>
             </div>
         </div>
     );
