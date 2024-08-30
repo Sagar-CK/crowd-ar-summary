@@ -100,7 +100,7 @@ export const createUser: RequestHandler<unknown, unknown, CreateUserBody, unknow
         while (usedArticles.has(assignedArticle.id)) {
             currentIndex++;
             if (currentIndex >= articles.length) {
-                throw createHttpError(500, "No more articles available.");
+                currentIndex = currentIndex % articles.length;
             }
             assignedArticle = articles[currentIndex];
         }
