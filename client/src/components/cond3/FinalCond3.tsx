@@ -8,7 +8,11 @@ import { Avatar, Button } from "antd";
 import { AuditOutlined, LoadingOutlined, RobotOutlined, UserOutlined } from "@ant-design/icons";
 import Markdown from "react-markdown";
 
-export const FinalCond3 = () => {
+type FinalCond3Props = {
+    initLoading: boolean;
+};
+
+export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
     const [summary, setSummary] = useState("");
     const [query, setQuery] = useState("");
     const [wordCount, setWordCount] = useState(0);
@@ -28,7 +32,7 @@ export const FinalCond3 = () => {
 
 
     const { isPending, error, data } = useQuery({
-        queryKey: ['finalSummary'],
+        queryKey: ['finalSummary', prolificID],
         queryFn: async () => {
             const res = await fetch(`${baseUrl}/api/users/${prolificID}`)
 
@@ -102,7 +106,7 @@ export const FinalCond3 = () => {
         });
 
         // Invalidate the query to refetch the updated data
-        queryClient.invalidateQueries({ queryKey: ['finalSummary'] });
+        queryClient.invalidateQueries({ queryKey: ['finalSummary', prolificID] });
 
         // Clear the query input field
         setQuery("");
@@ -126,7 +130,7 @@ export const FinalCond3 = () => {
         );
     }
 
-    if (error) {
+    if (error || !data) {
         return (
             <div className="flex h-full w-full items-center justify-center">
                 Something went wrong.
@@ -155,31 +159,39 @@ export const FinalCond3 = () => {
 
                                 <div className="flex flex-col h-5/6 w-full overflow-auto gap-y-4 rounded-sm  pb-2">
 
-                                    {data.queryHistory.map((interaction: Query) => (
-                                        <>
-                                            <div className="flex flex-col justify-center w-full gap-y-1 items-end h-auto">
-                                                {data.queryHistory.indexOf(interaction) === 0 ? <Avatar icon={<AuditOutlined /> } /> : <Avatar icon={<UserOutlined />} />}
-                                                <div className="bg-gray-200 bg-opacity-90 drop-shadow-xl text-prose self-end rounded-xl p-2 h-auto w-auto gap-x-2 flex items-center">
-                                                    {/* If it's the first query mentiong that  */}
-                                                    {interaction.query}
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col justify-center w-full gap-y-1 items-start h-auto">
-                                                <Avatar icon={<RobotOutlined />} />
-                                                <div className="bg-green-400 bg-opacity-40 drop-shadow-xl text-prose self-start rounded-xl p-2 h-auto w-auto">
-                                                    {/* Markdown of response */}
-                                                    <div className="flex flex-col items-start gap-x-2">
-                                                        {interaction.response
-                                                            .split("\n")
-                                                            .map((line, index) => (
-                                                                <Markdown key={index}>{line}</Markdown>
-                                                            ))}
-                                                    </div>
-                                                </div >
-                                            </div>
+                                    {initLoading ?
+                                        <div className="flex flex-col justify-center w-full gap-y-1 items-start h-auto">
+                                            <Avatar icon={<RobotOutlined />} />
+                                            <div className="bg-green-400 bg-opacity-40 drop-shadow-xl text-prose self-start rounded-xl p-2 h-auto w-auto">
 
-                                        </>
-                                    ))}
+                                                Getting my first summary... <LoadingOutlined className="h-auto w-auto self-center" />
+                                            </div>
+                                        </div>
+                                        : data.queryHistory.map((interaction: Query) => (
+                                            <>
+                                                <div className="flex flex-col justify-center w-full gap-y-1 items-end h-auto">
+                                                    {data.queryHistory.indexOf(interaction) === 0 ? <Avatar icon={<AuditOutlined />} /> : <Avatar icon={<UserOutlined />} />}
+                                                    <div className="bg-gray-200 bg-opacity-90 drop-shadow-xl text-prose self-end rounded-xl p-2 h-auto w-auto gap-x-2 flex items-center">
+                                                        {/* If it's the first query mentiong that  */}
+                                                        {interaction.query}
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col justify-center w-full gap-y-1 items-start h-auto">
+                                                    <Avatar icon={<RobotOutlined />} />
+                                                    <div className="bg-green-400 bg-opacity-40 drop-shadow-xl text-prose self-start rounded-xl p-2 h-auto w-auto">
+                                                        {/* Markdown of response */}
+                                                        <div className="flex flex-col items-start gap-x-2">
+                                                            {interaction.response
+                                                                .split("\n")
+                                                                .map((line, index) => (
+                                                                    <Markdown key={index}>{line}</Markdown>
+                                                                ))}
+                                                        </div>
+                                                    </div >
+                                                </div>
+
+                                            </>
+                                        ))}
                                     {
                                         loading && (
                                             <>

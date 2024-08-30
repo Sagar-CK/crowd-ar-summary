@@ -25,7 +25,6 @@ export const InitCond2 = ({ loading, setLoading }: InitCond2Props) => {
             if (!res.ok) {
                 throw new Error('Network response was not ok');
             }
-            console.log("I have been called");
             return await res.json();
         }
     })
@@ -45,7 +44,7 @@ export const InitCond2 = ({ loading, setLoading }: InitCond2Props) => {
                 messages: [
                     {
                         role: "user",
-                        content: `Summarize the following text in 100-150 words: ${data.article}  Ensure the summary captures the main points and key details. Return only the summary in the response.`
+                        content: `Summarize the following text in 100-150 words: ${data.article}  Ensure the summary captures the main points and key details.  Format your response as: SUMMARY: <your summary here>`
                     }
                 ],
                 stream: false,
@@ -69,8 +68,9 @@ export const InitCond2 = ({ loading, setLoading }: InitCond2Props) => {
 
             // Fetch LLM summary
             const llmSummary = await createLLMSummary.mutateAsync();
-            const summaryContent = llmSummary.data.message.content;
-
+            // Remove the "SUMMARY: " prefix from the LLM summary if it exists
+            const summaryContent = llmSummary.data.message.content.replace("SUMMARY:", "");
+        
             // Update with LLM summary
             await addInitialSummary.mutateAsync({ prolificID: prolificID!, initialSummary: summary, llmSummary: summaryContent });
 
@@ -105,7 +105,7 @@ export const InitCond2 = ({ loading, setLoading }: InitCond2Props) => {
     return (
         <div className="flex flex-col h-full w-full justify-start items-center gap-y-4 overflow-x-hidden text-sm">
             <div id="summary-article-container" className="flex justify-center w-5/6 h-2/3 gap-x-4">
-                <div id='article-container' className="flex flex-col justify-center items-center bg-gray-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
+                <div id='article-container' className="flex flex-col justify-start items-center bg-gray-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                     <h1 className="font-semibold text-xl">Article</h1>
                     <p className="overflow-y-scroll">
                         {data.article}

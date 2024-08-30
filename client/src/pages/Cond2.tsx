@@ -17,7 +17,6 @@ const Cond2 = () => {
         queryKey: ['cond2', prolificID],
         queryFn: async () => {
             try {
-                console.log("I am fetching rn!")
                 const res = await fetch(`${baseUrl}/api/users/${prolificID}`)
 
                 return await res.json();
@@ -38,7 +37,6 @@ const Cond2 = () => {
     }
 
     if (error || !data) {
-        console.log("Error or No Data:", error, data);
         return (
             <PreTask
                 condition={2}

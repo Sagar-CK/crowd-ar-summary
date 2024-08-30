@@ -6,7 +6,7 @@ import path from 'path';
 import csv from 'csv-parser';
 
 // Load and parse the dataset
-const datasetPath = path.join(__dirname, '../data/selected_articles.csv'); // Update the path to your dataset
+const datasetPath = path.join(__dirname, '../data/articles_summary.csv');
 // Initialize dataset and used articles
 const articles: { id: string; article: string; highlights: string; llm_summary: string;}[] = [];
 const usedArticles: Set<string> = new Set();
@@ -66,7 +66,6 @@ export const getUser: RequestHandler = async (req, res, next) => {
         const user = await UserModel.findOne({
             prolificID: prolificID
         })
-        console.log(user);
 
         if (!user) createHttpError(400, "User was not found!")
 

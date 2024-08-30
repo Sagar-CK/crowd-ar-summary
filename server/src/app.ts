@@ -6,12 +6,6 @@ import createHttpError, {isHttpError} from "http-errors";
 
 const app = express()
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-    console.log(`Request Path: ${req.path}`);
-    console.log(`Request Body: ${JSON.stringify(req.body)}`);
-    next();
-});
-
 app.use(cors());
 app.use(express.json());
 

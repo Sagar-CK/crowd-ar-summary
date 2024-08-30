@@ -29,7 +29,6 @@ export const FinalCond2 = ({ loading }: FinalCond2Props) => {
             if (!res.ok) {
                 throw new Error('Network response was not ok');
             }
-            console.log("I have been called");
             return await res.json();
         }
     })

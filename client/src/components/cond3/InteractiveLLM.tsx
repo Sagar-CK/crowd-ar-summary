@@ -3,10 +3,12 @@ import { InitCond3 } from "./InitCond3";
 import { FinalCond3 } from "./FinalCond3";
 import { useQuery } from "@tanstack/react-query";
 import { baseUrl } from "../../utils/Helper";
+import { useState } from "react";
 
 export const InteractiveLLM = () => {
     const [searchParams, _setSearchParams] = useSearchParams();
     const prolificID = searchParams.get("prolificID");
+    const [loading, setLoading] = useState(false);
 
     const { isPending, error, data } = useQuery({
         queryKey: ['cond3task'],
@@ -30,7 +32,7 @@ export const InteractiveLLM = () => {
         );
     }
 
-    if (error) {
+    if (error || !data) {
         return (
             <div className="flex h-full w-full items-center justify-center">
                 Something went wrong.
@@ -41,11 +43,12 @@ export const InteractiveLLM = () => {
 
     // They must have submitted the first summary.
     if(data.initialSummary){
-        return <FinalCond3 />
+        return <FinalCond3 initLoading={loading} />
     }
 
     // Still at the first stage.
-    return <InitCond3 />;  
+    return <InitCond3 loading={loading} setLoading={setLoading} />
 
 
 };
+

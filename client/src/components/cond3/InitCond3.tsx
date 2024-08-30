@@ -6,10 +6,14 @@ import axios from "axios";
 import { Query } from "../../types/User";
 import { Button } from "antd";
 
-export const InitCond3 = () => {
+type InitCond3Props = {
+    loading: boolean;
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+export const InitCond3 = ({loading, setLoading}: InitCond3Props) => {
     const [summary, setSummary] = useState("");
     const [wordCount, setWordCount] = useState(0);
-    const [loading, setLoading] = useState(false);
 
     const [searchParams, _setSearchParams] = useSearchParams();
     const queryClient = useQueryClient();
@@ -24,7 +28,6 @@ export const InitCond3 = () => {
             if (!res.ok) {
                 throw new Error('Network response was not ok');
             }
-            console.log("I have been called");
             return await res.json();
         }
     })
@@ -44,7 +47,7 @@ export const InitCond3 = () => {
                 messages: [
                     {
                         role: "user",
-                        content: `Summarize the following text in 100-150 words: ${data.article}  Ensure the summary captures the main points and key details. Return only the summary in the response.`
+                        content: `Summarize the following text in 100-150 words: ${data.article}  Ensure the summary captures the main points and key details.  Format your response as: SUMMARY: <your summary here>`
                     }
                 ],
                 stream: false,
@@ -58,21 +61,29 @@ export const InitCond3 = () => {
 
     const submitInitialSummary = async (e: React.FormEvent) => {
         e.preventDefault();
-
         setLoading(true);
+        try {
+            // Initial mutation without LLM summary
+            await addInitialSummary.mutateAsync({ prolificID: prolificID!, initialSummary: summary, llmSummary: "", queryHistory: []});
+            queryClient.invalidateQueries({ queryKey: ['cond3task'] });
 
-        const llmSummary = await createLLMSummary.mutateAsync().then((res) => {
-            return res.data.message.content
-        })
+            // Fetch LLM summary
+            const llmSummary = await createLLMSummary.mutateAsync();
+            // Remove the "SUMMARY: " prefix from the LLM summary if it exists
+            const summaryContent = llmSummary.data.message.content.replace("SUMMARY:", "");
+        
+            // Update with LLM summary
+            await addInitialSummary.mutateAsync({ prolificID: prolificID!, initialSummary: summary, llmSummary: summaryContent, queryHistory: [{query: `Summarize the article in 100-150 words. Ensure the summary captures the main points and key details. Return only the summary in the response.`, response: summaryContent}]});
 
-        setLoading(false);
-
-        addInitialSummary.mutate({ prolificID: prolificID!, initialSummary: summary, llmSummary: llmSummary, queryHistory: [{query: `Summarize the article in 100-150 words. Ensure the summary captures the main points and key details. Return only the summary in the response.`, response: llmSummary}]}, {
-            onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: ['cond3task'] })
-            }
-
-        })
+            // Invalidate the query used by FinalCond2 to fetch the updated data
+            queryClient.invalidateQueries({ queryKey: ['finalSummary', prolificID] });
+        } catch (error) {
+            console.error("An error occurred:", error);
+            // Handle error gracefully.
+        } finally {
+            // Ensure loading is set to false no matter the outcome.
+            setLoading(false);
+        }
     };
 
     if (isPending || !data) {
@@ -95,7 +106,7 @@ export const InitCond3 = () => {
     return (
         <div className="flex flex-col h-full w-full justify-start items-center gap-y-4 overflow-x-hidden text-sm">
             <div id="summary-article-container" className="flex justify-center w-5/6 h-2/3 gap-x-4">
-                <div id='article-container' className="flex flex-col justify-center items-center bg-gray-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
+                <div id='article-container' className="flex flex-col justify-start items-center bg-gray-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                     <h1 className="font-semibold text-xl">Article</h1>
                     <p className="overflow-y-scroll">
                         {data.article}
