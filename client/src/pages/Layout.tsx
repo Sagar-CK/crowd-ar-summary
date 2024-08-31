@@ -61,7 +61,8 @@ const Layout = ({condition, children }: LayoutProps) => {
         <img className="h-10" src={TUDLogo} alt="TU Delft" />
         <div className="flex items-start gap-x-4">
           {
-            data && <Button type='primary' onClick={() => setInstructionsOpen(true)}>
+            // data && 
+            <Button type='primary' onClick={() => setInstructionsOpen(true)}>
             <QuestionCircleOutlined />
             Task Instructions
           </Button>
