@@ -133,7 +133,7 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
     if (error || !data) {
         return (
             <div className="flex h-full w-full items-center justify-center">
-                Something went wrong.
+                Something went wrong. Contact the researcher on Prolific!
             </div>
         );
     }
@@ -167,7 +167,15 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
                                                 Getting my first summary... <LoadingOutlined className="h-auto w-auto self-center" />
                                             </div>
                                         </div>
-                                        : data.queryHistory.map((interaction: Query) => (
+                                        : data.queryHistory.length <= 0 ? <>
+                                        <div className="flex flex-col justify-center w-full gap-y-1 items-end h-auto">
+                                            <Avatar icon={<AuditOutlined />} />
+                                            <div className="bg-gray-200 bg-opacity-90 drop-shadow-xl text-prose self-end rounded-xl p-2 h-auto w-auto gap-x-2 flex items-center">
+                                                Error occured while fetching the conversation history! Refresh this page and wait ~2 minutes. If the issue persists, contact the researcher on Prolific!
+                                            </div>
+                                        </div>
+                                        
+                                        </> :data.queryHistory.map((interaction: Query) => (
                                             <>
                                                 <div className="flex flex-col justify-center w-full gap-y-1 items-end h-auto">
                                                     {data.queryHistory.indexOf(interaction) === 0 ? <Avatar icon={<AuditOutlined />} /> : <Avatar icon={<UserOutlined />} />}
