@@ -3,4 +3,3 @@ export const calculateWordCount = (text: string): number => {
 }
 
 export const baseUrl = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:5000";
-export const LLMUrl = import.meta.env.VITE_REACT_APP_API_LLM_URL || "http://localhost:11434/api/chat";

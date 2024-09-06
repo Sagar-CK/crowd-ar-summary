@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LLMUrl, baseUrl, calculateWordCount } from "../../utils/Helper";
+import { baseUrl, calculateWordCount } from "../../utils/Helper";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -42,7 +42,7 @@ export const InitCond3 = ({loading, setLoading}: InitCond3Props) => {
 
     const createLLMSummary = useMutation({
         mutationFn: () => {
-            return axios.post(`${LLMUrl}`, { 
+            return axios.post(`${baseUrl}/api/users/query`, { 
                 model: "llama3.1",
                 messages: [
                     {

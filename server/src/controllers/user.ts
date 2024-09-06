@@ -190,3 +190,29 @@ export const updateUser: RequestHandler<UpdateUserParams, unknown, UpdateUserBod
         next(error);
     }
 };
+
+export const queryLLM: RequestHandler = async (req, res, next) => {
+    try {
+        const url = process.env.LLM_API_URL;
+        if (!url) {
+            throw createHttpError(500, "LLM_API_URL is not set");
+        }
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(req.body),
+        });
+
+        if (!response.ok) {
+            throw createHttpError(500, "Error querying LLM");
+        }
+
+        const data = await response.json();
+        res.status(200).json(data);
+    } catch (error) {
+        next(error);
+    }
+}

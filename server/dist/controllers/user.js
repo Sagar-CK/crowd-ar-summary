@@ -12,14 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUser = exports.createUser = exports.getUser = exports.getUsers = void 0;
+exports.queryLLM = exports.updateUser = exports.createUser = exports.getUser = exports.getUsers = void 0;
 const user_1 = __importDefault(require("../models/user"));
 const http_errors_1 = __importDefault(require("http-errors"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const csv_parser_1 = __importDefault(require("csv-parser"));
 // Load and parse the dataset
-const datasetPath = path_1.default.join(__dirname, '../data/selected_articles.csv'); // Update the path to your dataset
+const datasetPath = path_1.default.join(__dirname, '../data/articles_summary.csv');
 // Initialize dataset and used articles
 const articles = [];
 const usedArticles = new Set();
@@ -71,7 +71,6 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         const user = yield user_1.default.findOne({
             prolificID: prolificID
         });
-        console.log(user);
         if (!user)
             (0, http_errors_1.default)(400, "User was not found!");
         res.status(200).json(user);
@@ -102,7 +101,7 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         while (usedArticles.has(assignedArticle.id)) {
             currentIndex++;
             if (currentIndex >= articles.length) {
-                throw (0, http_errors_1.default)(500, "No more articles available.");
+                currentIndex = currentIndex % articles.length;
             }
             assignedArticle = articles[currentIndex];
         }
@@ -162,4 +161,28 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.updateUser = updateUser;
+const queryLLM = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const url = process.env.LLM_API_URL;
+        if (!url) {
+            throw (0, http_errors_1.default)(500, "LLM_API_URL is not set");
+        }
+        const response = yield fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(req.body),
+        });
+        if (!response.ok) {
+            throw (0, http_errors_1.default)(500, "Error querying LLM");
+        }
+        const data = yield response.json();
+        res.status(200).json(data);
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.queryLLM = queryLLM;
 //# sourceMappingURL=user.js.map

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { LLMUrl, baseUrl, calculateWordCount } from "../../utils/Helper";
+import { baseUrl, calculateWordCount } from "../../utils/Helper";
 import { useSearchParams } from "react-router-dom";
 import { Query } from "../../types/User";
 import { Avatar, Button } from "antd";
@@ -61,7 +61,7 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
             // Combine all messages into a single array
             const messages = [systemMessage, ...historyMessages, userMessage];
 
-            return axios.post(`${LLMUrl}`, {
+            return axios.post(`${baseUrl}/api/users/query`, {
                 model: "llama3.1",
                 messages,
                 stream: false,

@@ -32,11 +32,6 @@ const cors_1 = __importDefault(require("cors"));
 const user_1 = __importDefault(require("./routes/user"));
 const http_errors_1 = __importStar(require("http-errors"));
 const app = (0, express_1.default)();
-app.use((req, res, next) => {
-    console.log(`Request Path: ${req.path}`);
-    console.log(`Request Body: ${JSON.stringify(req.body)}`);
-    next();
-});
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.get("/", (req, res) => {
