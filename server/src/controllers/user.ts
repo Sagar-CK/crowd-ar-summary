@@ -206,6 +206,7 @@ export const queryLLM: RequestHandler = async (req, res, next) => {
             body: JSON.stringify(req.body),
         });
 
+
         if (!response.ok) {
             throw createHttpError(500, "Error querying LLM");
         }
