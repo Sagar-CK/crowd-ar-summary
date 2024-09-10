@@ -4,21 +4,20 @@ import axios from "axios";
 import { baseUrl, calculateWordCount } from "../../utils/Helper";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "antd";
-import { LoadingOutlined, RobotOutlined } from "@ant-design/icons";
+import { LoadingOutlined, RobotOutlined, RollbackOutlined } from "@ant-design/icons";
+import { QueryState } from "../../types/QueryState";
 
 type FinalCond2Props = {
-    loading: boolean;
+    queryState: QueryState;
+    setQueryState: React.Dispatch<React.SetStateAction<QueryState>>;
 };
 
-export const FinalCond2 = ({ loading }: FinalCond2Props) => {
+export const FinalCond2 = ({ queryState, setQueryState }: FinalCond2Props) => {
     const [finalSummary, setFinalSummary] = useState("");
-
     const [finalSummaryWordCount, setFinalSummaryWordCount] = useState(0);
-
     const [searchParams, _setSearchParams] = useSearchParams();
 
     const prolificID = searchParams.get("prolificID");
-
 
     const queryClient = useQueryClient();
 
@@ -33,6 +32,51 @@ export const FinalCond2 = ({ loading }: FinalCond2Props) => {
         }
     })
 
+    const createLLMSummary = useMutation({
+        mutationFn: () => {
+            return axios.post(`${baseUrl}/api/users/query`, {
+                model: "llama3.1",
+                messages: [
+                    {
+                        role: "user",
+                        content: `Summarize the following text in 100-150 words: ${data.article}  Ensure the summary captures the main points and key details.  Format your response as: SUMMARY: <your summary here>`
+                    }
+                ],
+                stream: false,
+            })
+        }
+    })
+
+    const retryLLMSummary = async () => {
+        // Set loading to true at the start.
+        setQueryState({ loading: true, error: false });
+
+        try {
+            // Fetch LLM summary
+            const llmSummary = await createLLMSummary.mutateAsync();
+            // Remove the "SUMMARY: " prefix from the LLM summary if it exists
+            const summaryContent = llmSummary.data.message.content.replace("SUMMARY:", "");
+
+            // Update with LLM summary
+            await addLLMSummary.mutateAsync({ prolificID: prolificID!, llmSummary: summaryContent });
+
+            // Invalidate the query used by FinalCond2 to fetch the updated data
+            queryClient.invalidateQueries({ queryKey: ['initialSummary', prolificID] });
+
+            // Ensure loading is set to false no matter the outcome.
+            setQueryState({ loading: false, error: false });
+        } catch (error) {
+            setQueryState({ loading: false, error: true });
+            // Handle error gracefully.
+        }
+    };
+
+
+    const addLLMSummary = useMutation({
+        mutationFn: ({ prolificID, llmSummary }: { prolificID: string, llmSummary: string }) => {
+            return axios.patch(`${baseUrl}/api/users/${prolificID}`, { llmSummary: llmSummary })
+        },
+    })
 
     const addFinalSummary = useMutation({
         mutationFn: ({ prolificID, finalSummary }: { prolificID: string, finalSummary: string }) => {
@@ -89,8 +133,24 @@ export const FinalCond2 = ({ loading }: FinalCond2Props) => {
                             <div id='summary-container' className="flex flex-col justify-start items-center bg-green-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                                 <h1 className="font-semibold text-xl">{<RobotOutlined />} CondenseCrew Summary</h1>
                                 <p className="overflow-y-auto">
-                                    {loading ? <LoadingOutlined /> : data.llmSummary}
+                                    {queryState.loading ? <LoadingOutlined /> : data.llmSummary}
                                 </p>
+                                {!data.llmSummary || !queryState.loading && queryState.error ? <>
+                                    <div className="text-red-500 text-lg font-semibold w-full h-full flex items-center flex-col justify-evenly">
+                                        <p>
+                                            We failed to fetch the LLM summary! Please try again.
+                                            If the error persists, contact the researcher on Prolific.
+                                        </p>
+
+                                        <Button
+                                            type="primary"
+                                            onClick={() => retryLLMSummary()}
+                                        >
+                                            Retry <RollbackOutlined />
+                                        </Button>
+                                    </div>
+                                </>
+                                    : null}
                             </div>
                             <div id='human-summary-container' className="flex flex-col justify-start items-center bg-amber-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                                 <h1 className="font-semibold text-xl">Original Summary</h1>

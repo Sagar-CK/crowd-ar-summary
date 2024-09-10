@@ -9,7 +9,7 @@ export const HumanLLMHumman = () => {
     const [searchParams, _setSearchParams] = useSearchParams();
 
     const prolificID = searchParams.get("prolificID");
-    const [loading, setLoading] = useState(false);
+    const [queryState, setQueryState] = useState({ loading: false, error: false });
     
     const { isPending, error, data } = useQuery({
         queryKey: ['cond2task'],
@@ -42,10 +42,10 @@ export const HumanLLMHumman = () => {
     }
     // They must have submitted the first summary.
     if(data.initialSummary){
-        return <FinalCond2 loading={loading} />
+        return <FinalCond2 queryState={queryState} setQueryState={setQueryState} />
     }
 
     // Still at the first stage.
-    return <InitCond2 loading={loading} setLoading={setLoading} />
+    return <InitCond2 queryState={queryState} setQueryState={setQueryState} />
 
 }

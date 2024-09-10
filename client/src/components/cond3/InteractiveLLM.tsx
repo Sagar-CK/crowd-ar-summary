@@ -8,7 +8,7 @@ import { useState } from "react";
 export const InteractiveLLM = () => {
     const [searchParams, _setSearchParams] = useSearchParams();
     const prolificID = searchParams.get("prolificID");
-    const [loading, setLoading] = useState(false);
+    const [queryState, setQueryState] = useState({ loading: false, error: false });
 
     const { isPending, error, data } = useQuery({
         queryKey: ['cond3task'],
@@ -43,11 +43,11 @@ export const InteractiveLLM = () => {
 
     // They must have submitted the first summary.
     if(data.initialSummary){
-        return <FinalCond3 initLoading={loading} />
+        return <FinalCond3 queryState={queryState} setQueryState={setQueryState} />
     }
 
     // Still at the first stage.
-    return <InitCond3 loading={loading} setLoading={setLoading} />
+    return <InitCond3 queryState={queryState} setQueryState={setQueryState} />
 
 
 };

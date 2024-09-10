@@ -9,8 +9,6 @@ import csv from 'csv-parser';
 const datasetPath = path.join(__dirname, '../data/articles_summary.csv');
 // Initialize dataset and used articles
 const articles: { id: string; article: string; highlights: string; llm_summary: string;}[] = [];
-const usedArticles: Set<string> = new Set();
-let currentIndex = 0;
 
 const loadDataset = async () => {
     return new Promise<void>((resolve, reject) => {
@@ -91,22 +89,9 @@ export const createUser: RequestHandler<unknown, unknown, CreateUserBody, unknow
             return res.status(200).json(user); // User already exists
         }
 
-        // Find the next available article
-        if (currentIndex >= articles.length) {
-            throw createHttpError(500, "No more articles available.");
-        }
 
-        let assignedArticle = articles[currentIndex];
-        while (usedArticles.has(assignedArticle.id)) {
-            currentIndex++;
-            if (currentIndex >= articles.length) {
-                currentIndex = currentIndex % articles.length;
-            }
-            assignedArticle = articles[currentIndex];
-        }
-
-        usedArticles.add(assignedArticle.id);
-        currentIndex++;
+        // Assign the next available article
+        let assignedArticle = await getNextArticle(condition);
 
         // if condition 1 add the llm summary
         let llmSummary = "";
@@ -217,3 +202,37 @@ export const queryLLM: RequestHandler = async (req, res, next) => {
         next(error);
     }
 }
+
+// For a user's condition we need to fetch the next usable article.
+// We retrieve all the users for a condition and store their article IDs
+// We exclude users that have revoked consent or have timed out
+// We then find the first article that is not in the list of used articles
+// If all articles are used we return null
+
+export const getNextArticle = async (condition: number): Promise<{ id: string; article: string; highlights: string; llm_summary: string;} | null> => {
+    try {
+        // Either the field is false or null
+        const users = await UserModel.find({
+            condition: condition,
+            $or: [
+                { revokedConsent: { $ne: true } },
+                { revokedConsent: { $exists: false } }
+            ]
+        }).exec();
+        console.log('Users:', users);
+
+        const usedArticles = users.map((user) => user.articleID);
+
+        const availableArticles = articles.filter((article) => !usedArticles.includes(article.id));
+
+        // console.log('Available articles:', availableArticles);
+
+        if (availableArticles.length === 0) {
+            return null;
+        }
+
+        return availableArticles[0];
+    } catch (error) {
+        throw error;
+    }
+};

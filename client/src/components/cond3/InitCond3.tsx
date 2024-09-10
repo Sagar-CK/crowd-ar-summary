@@ -5,13 +5,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Query } from "../../types/User";
 import { Button } from "antd";
+import { QueryState } from "../../types/QueryState";
 
 type InitCond3Props = {
-    loading: boolean;
-    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+    queryState: QueryState;
+    setQueryState: React.Dispatch<React.SetStateAction<QueryState>>;
 };
 
-export const InitCond3 = ({loading, setLoading}: InitCond3Props) => {
+export const InitCond3 = ({ queryState, setQueryState }: InitCond3Props) => {
     const [summary, setSummary] = useState("");
     const [wordCount, setWordCount] = useState(0);
 
@@ -20,7 +21,7 @@ export const InitCond3 = ({loading, setLoading}: InitCond3Props) => {
 
     const prolificID = searchParams.get("prolificID");
 
-    
+
     const { isPending, error, data } = useQuery({
         queryKey: ['initSummary', prolificID],
         queryFn: async () => {
@@ -35,14 +36,14 @@ export const InitCond3 = ({loading, setLoading}: InitCond3Props) => {
 
 
     const addInitialSummary = useMutation({
-        mutationFn: ({ prolificID, initialSummary, llmSummary,  queryHistory}: { prolificID: string, initialSummary: string, llmSummary: string,  queryHistory: Query[] }) => {
+        mutationFn: ({ prolificID, initialSummary, llmSummary, queryHistory }: { prolificID: string, initialSummary: string, llmSummary: string, queryHistory: Query[] }) => {
             return axios.patch(`${baseUrl}/api/users/${prolificID}`, { initialSummary: initialSummary, llmSummary: llmSummary, queryHistory: queryHistory })
         },
     })
 
     const createLLMSummary = useMutation({
         mutationFn: () => {
-            return axios.post(`${baseUrl}/api/users/query`, { 
+            return axios.post(`${baseUrl}/api/users/query`, {
                 model: "llama3.1",
                 messages: [
                     {
@@ -61,28 +62,26 @@ export const InitCond3 = ({loading, setLoading}: InitCond3Props) => {
 
     const submitInitialSummary = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setQueryState({ loading: true, error: false });
         try {
             // Initial mutation without LLM summary
-            await addInitialSummary.mutateAsync({ prolificID: prolificID!, initialSummary: summary, llmSummary: "", queryHistory: []});
+            await addInitialSummary.mutateAsync({ prolificID: prolificID!, initialSummary: summary, llmSummary: "", queryHistory: [] });
             queryClient.invalidateQueries({ queryKey: ['cond3task'] });
 
             // Fetch LLM summary
             const llmSummary = await createLLMSummary.mutateAsync();
             // Remove the "SUMMARY: " prefix from the LLM summary if it exists
             const summaryContent = llmSummary.data.message.content.replace("SUMMARY:", "");
-        
+
             // Update with LLM summary
-            await addInitialSummary.mutateAsync({ prolificID: prolificID!, initialSummary: summary, llmSummary: summaryContent, queryHistory: [{query: `Summarize the article in 100-150 words. Ensure the summary captures the main points and key details. Return only the summary in the response.`, response: summaryContent}]});
+            await addInitialSummary.mutateAsync({ prolificID: prolificID!, initialSummary: summary, llmSummary: summaryContent, queryHistory: [{ query: `Summarize the article in 100-150 words. Ensure the summary captures the main points and key details. Return only the summary in the response.`, response: summaryContent }] });
 
             // Invalidate the query used by FinalCond2 to fetch the updated data
             queryClient.invalidateQueries({ queryKey: ['finalSummary', prolificID] });
+
+            setQueryState({ loading: false, error: false });
         } catch (error) {
-            console.error("An error occurred:", error);
-            // Handle error gracefully.
-        } finally {
-            // Ensure loading is set to false no matter the outcome.
-            setLoading(false);
+            setQueryState({ loading: false, error: true });
         }
     };
 
@@ -125,7 +124,7 @@ export const InitCond3 = ({loading, setLoading}: InitCond3Props) => {
                     <div className="text-gray-600  flex self-end">Word Count: {wordCount}</div>
                     <Button
                         type="primary"
-                        loading={loading}
+                        loading={queryState.loading}
                         // className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-500 hover:cursor-pointer disabled:hover:cursor-default"
                         onClick={submitInitialSummary}
                         disabled={wordCount > 150 || wordCount < 100}

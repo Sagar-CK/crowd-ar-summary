@@ -4,13 +4,15 @@ import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Button } from "antd";
+import { QueryState } from "../../types/QueryState";
 
 type InitCond2Props = {
-    loading: boolean;
-    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+    queryState: QueryState;
+    setQueryState: React.Dispatch<React.SetStateAction<QueryState>>;
 };
 
-export const InitCond2 = ({ loading, setLoading }: InitCond2Props) => {
+
+export const InitCond2 = ({queryState, setQueryState}: InitCond2Props) => {
     const [summary, setSummary] = useState("");
     const [wordCount, setWordCount] = useState(0);
     const queryClient = useQueryClient();
@@ -36,7 +38,7 @@ export const InitCond2 = ({ loading, setLoading }: InitCond2Props) => {
             return axios.patch(`${baseUrl}/api/users/${prolificID}`, { initialSummary: initialSummary, llmSummary: llmSummary })
         },
     })
-
+    
     const createLLMSummary = useMutation({
         mutationFn: () => {
             return axios.post(`${baseUrl}/api/users/query`, {
@@ -59,7 +61,7 @@ export const InitCond2 = ({ loading, setLoading }: InitCond2Props) => {
     const submitInitialSummary = async (e: React.FormEvent) => {
         e.preventDefault();
         // Set loading to true at the start.
-        setLoading(true);
+        setQueryState({ loading: true, error: false });
 
         try {
             // Initial mutation without LLM summary
@@ -76,12 +78,11 @@ export const InitCond2 = ({ loading, setLoading }: InitCond2Props) => {
 
             // Invalidate the query used by FinalCond2 to fetch the updated data
             queryClient.invalidateQueries({ queryKey: ['initialSummary', prolificID] });
-        } catch (error) {
-            console.error("An error occurred:", error);
-            // Handle error gracefully.
-        } finally {
+
             // Ensure loading is set to false no matter the outcome.
-            setLoading(false);
+            setQueryState({ loading: false, error: false });
+        } catch (error) {
+            setQueryState({ loading: false, error: true });
         }
     };
 
@@ -124,7 +125,7 @@ export const InitCond2 = ({ loading, setLoading }: InitCond2Props) => {
                     <div className="text-gray-600  flex self-end">Word Count: {wordCount}</div>
                     <Button
                         type="primary"
-                        loading={loading}
+                        loading={queryState.loading}
                         // className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-500 hover:cursor-pointer disabled:hover:cursor-default"
                         onClick={submitInitialSummary}
                         disabled={wordCount > 150 || wordCount < 100}

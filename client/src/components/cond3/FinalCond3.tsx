@@ -5,18 +5,20 @@ import { baseUrl, calculateWordCount } from "../../utils/Helper";
 import { useSearchParams } from "react-router-dom";
 import { Query } from "../../types/User";
 import { Avatar, Button } from "antd";
-import { AuditOutlined, LoadingOutlined, RobotOutlined, UserOutlined } from "@ant-design/icons";
+import { AuditOutlined, LoadingOutlined, RobotOutlined, RollbackOutlined, UserOutlined } from "@ant-design/icons";
 import Markdown from "react-markdown";
+import { QueryState } from "../../types/QueryState";
 
 type FinalCond3Props = {
-    initLoading: boolean;
+    queryState: QueryState;
+    setQueryState: React.Dispatch<React.SetStateAction<QueryState>>;
 };
 
-export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
+export const FinalCond3 = ({ queryState, setQueryState }: FinalCond3Props) => {
     const [summary, setSummary] = useState("");
     const [query, setQuery] = useState("");
     const [wordCount, setWordCount] = useState(0);
-    const [loading, setLoading] = useState(false);
+    const [userQueryState, setUserQueryState] = useState({ loading: false, error: false });
 
     const [searchParams, _setSearchParams] = useSearchParams();
 
@@ -40,6 +42,47 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
         }
     })
 
+
+    const addInitialSummary = useMutation({
+        mutationFn: ({ prolificID, llmSummary, queryHistory }: { prolificID: string, llmSummary: string, queryHistory: Query[] }) => {
+            return axios.patch(`${baseUrl}/api/users/${prolificID}`, { llmSummary: llmSummary, queryHistory: queryHistory })
+        },
+    })
+
+    const createLLMSummary = useMutation({
+        mutationFn: () => {
+            return axios.post(`${baseUrl}/api/users/query`, {
+                model: "llama3.1",
+                messages: [
+                    {
+                        role: "user",
+                        content: `Summarize the following text in 100-150 words: ${data.article}  Ensure the summary captures the main points and key details.  Format your response as: SUMMARY: <your summary here>`
+                    }
+                ],
+                stream: false,
+            })
+        }
+    })
+
+    const submitInitialSummary = async () => {
+        setQueryState({ loading: true, error: false });
+        try {
+            // Fetch LLM summary
+            const llmSummary = await createLLMSummary.mutateAsync();
+            // Remove the "SUMMARY: " prefix from the LLM summary if it exists
+            const summaryContent = llmSummary.data.message.content.replace("SUMMARY:", "");
+
+            // Update with LLM summary
+            await addInitialSummary.mutateAsync({ prolificID: prolificID!, llmSummary: summaryContent, queryHistory: [{ query: `Summarize the article in 100-150 words. Ensure the summary captures the main points and key details. Return only the summary in the response.`, response: summaryContent }] });
+
+            // Invalidate the query used by FinalCond2 to fetch the updated data
+            queryClient.invalidateQueries({ queryKey: ['finalSummary', prolificID] });
+
+            setQueryState({ loading: false, error: false });
+        } catch (error) {
+            setQueryState({ loading: false, error: true });
+        }
+    };
 
     const submitQueryToLLM = useMutation({
         mutationFn: ({ query }: { query: string }) => {
@@ -84,38 +127,42 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
 
     // Scroll to bottom when data changes (new interactions)
     useEffect(() => {
-        if (!loading && conversationEndRef.current) {
+        if (!queryState.loading && conversationEndRef.current) {
             conversationEndRef.current.scrollIntoView({ behavior: "smooth" });
         }
-    }, [data, loading]); // Dependencies include data and loading state
+    }, [data, queryState.loading]); // Dependencies include data and loading state
 
     const handleQuerySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setUserQueryState({ loading: true, error: false });
+        try {
 
-        const res = await submitQueryToLLM.mutateAsync({ query: query });
+            const res = await submitQueryToLLM.mutateAsync({ query: query });
 
+            // Assuming sampleLLMSummary is the LLM's response
+            const newInteraction = {
+                query: query,
+                response: res.data.message.content, // Replace with actual LLM response
+            };
 
-        // Assuming sampleLLMSummary is the LLM's response
-        const newInteraction = {
-            query: query,
-            response: res.data.message.content, // Replace with actual LLM response
-        };
+            // Update the queryHistory with the new interaction
+            const updatedQueryHistory = [...data.queryHistory, newInteraction];
 
-        // Update the queryHistory with the new interaction
-        const updatedQueryHistory = [...data.queryHistory, newInteraction];
+            // Send the updated queryHistory to the backend
+            await axios.patch(`${baseUrl}/api/users/${prolificID}`, {
+                queryHistory: updatedQueryHistory
+            });
 
-        // Send the updated queryHistory to the backend
-        await axios.patch(`${baseUrl}/api/users/${prolificID}`, {
-            queryHistory: updatedQueryHistory
-        });
+            // Invalidate the query to refetch the updated data
+            queryClient.invalidateQueries({ queryKey: ['finalSummary', prolificID] });
 
-        // Invalidate the query to refetch the updated data
-        queryClient.invalidateQueries({ queryKey: ['finalSummary', prolificID] });
-
-        // Clear the query input field
-        setQuery("");
-        setLoading(false);
+            // Clear the query input field
+            setQuery("");
+            setUserQueryState({ loading: false, error: false });
+        } catch (error) {
+            console.log(error);
+            setUserQueryState({ loading: false, error: true });
+        }
     };
 
     const handleProceed = async (e: React.FormEvent) => {
@@ -164,7 +211,7 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
 
                                 <div className="flex flex-col h-5/6 w-full overflow-auto gap-y-4 rounded-sm  pb-2">
 
-                                    {initLoading ?
+                                    {queryState.loading ?
                                         <div className="flex flex-col justify-center w-full gap-y-1 items-start h-auto">
                                             <Avatar icon={<RobotOutlined />} />
                                             <div className="bg-green-400 bg-opacity-40 drop-shadow-xl text-prose self-start rounded-xl p-2 h-auto w-auto">
@@ -172,15 +219,25 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
                                                 Getting my first summary... <LoadingOutlined className="h-auto w-auto self-center" />
                                             </div>
                                         </div>
-                                        : data.queryHistory.length <= 0 ? <>
-                                        <div className="flex flex-col justify-center w-full gap-y-1 items-end h-auto">
-                                            <Avatar icon={<AuditOutlined />} />
-                                            <div className="bg-gray-200 bg-opacity-90 drop-shadow-xl text-prose self-end rounded-xl p-2 h-auto w-auto gap-x-2 flex items-center">
-                                                Error occured while fetching the conversation history! Refresh this page and wait ~2 minutes. If the issue persists, contact the researcher on Prolific!
+                                        : data.queryHistory.length <= 0 || !queryState.loading && queryState.error ? (<>
+                                            <div className="flex flex-col justify-center w-full gap-y-1 items-end h-auto">
+                                                <Avatar icon={<AuditOutlined />} />
+                                                <div className="bg-red-300 bg-opacity-90 drop-shadow-xl text-prose self-end rounded-xl p-2 h-auto w-auto gap-x-2 flex items-center">
+                                                    Error occured while retrieving the first summary by CondenseCrew! Please try again.
+                                                    If the error persists, contact the researcher on Prolific.
+
+                                                    <Button
+                                                        type="primary"
+                                                        onClick={submitInitialSummary}
+                                                        disabled={queryState.loading}
+                                                    >
+                                                        Retry <RollbackOutlined />
+                                                    </Button>
+
+                                                </div>
                                             </div>
-                                        </div>
-                                        
-                                        </> :data.queryHistory.map((interaction: Query) => (
+
+                                        </>) : (data.queryHistory.map((interaction: Query) => (
                                             <>
                                                 <div className="flex flex-col justify-center w-full gap-y-1 items-end h-auto">
                                                     {data.queryHistory.indexOf(interaction) === 0 ? <Avatar icon={<AuditOutlined />} /> : <Avatar icon={<UserOutlined />} />}
@@ -204,9 +261,9 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
                                                 </div>
 
                                             </>
-                                        ))}
+                                        )))}
                                     {
-                                        loading && (
+                                        userQueryState.loading && (
                                             <>
                                                 <div className="flex flex-col justify-center w-full gap-y-1 items-end h-auto">
                                                     <Avatar icon={<UserOutlined />} />
@@ -224,6 +281,25 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
                                         )
 
                                     }
+                                    {
+                                        userQueryState.error && (
+                                            <>
+                                                <div className="flex flex-col justify-center w-full gap-y-1 items-end h-auto">
+                                                    <Avatar icon={<UserOutlined />} />
+                                                    <div className="bg-gray-200 bg-opacity-90 drop-shadow-xl text-prose self-end rounded-xl p-2 h-auto w-auto gap-x-2 flex items-center">
+                                                        {query}
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col justify-center w-full gap-y-1 items-start h-auto">
+                                                    <Avatar icon={<RobotOutlined />} />
+                                                    <div className="bg-red-300 bg-opacity-90 drop-shadow-xl text-prose self-start rounded-xl p-2 h-auto w-auto gap-x-2 flex items-center">
+                                                        Error occured while processing your query! Please try again.
+                                                        If the error persists, contact the researcher on Prolific.
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )
+                                    }
                                     <div ref={conversationEndRef} />
                                 </div>
                                 <form className="flex flex-col items-center justify-center w-full gap-y-2">
@@ -233,14 +309,14 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
                                         value={query}
                                         onChange={(e) => setQuery(e.target.value)}
                                         placeholder="Message CondenseCrew..."
-                                        disabled={loading}
+                                        disabled={userQueryState.loading}
                                     />
                                     <Button
                                         type="primary"
-                                        loading={loading}
+                                        loading={userQueryState.loading}
                                         // className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-500 hover:cursor-pointer disabled:hover:cursor-default"
                                         onClick={handleQuerySubmit}
-                                        disabled={query.trim().length === 0 || loading}
+                                        disabled={query.trim().length === 0 || userQueryState.loading}
                                     >
                                         Send Query
                                     </Button>
