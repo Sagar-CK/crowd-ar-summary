@@ -46,7 +46,7 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
             // Define the system message separately for clarity
             const systemMessage = {
                 role: "system",
-                content: `You are an expert assistant helping the user understand and interact with the provided content. The user has access to an article, which you can reference to answer questions, provide explanations, or elaborate on topics. This is the article: ${data.article}. Use your knowledge and the article to give accurate and detailed responses. If relevant, refer directly to sections of the article. If the information is not available in the article, use your general knowledge to help the user effectively. Below is the conversation history between the user and the assistant. Always focus your response to the latest user query.`,
+                content: `You are an expert assistant helping the user understand and interact with the provided content. The user has access to an article, which you can reference to answer questions, provide explanations, or elaborate on topics. This is the article: ${data.article}.`
             };
 
             // Map the query history into the message format expected by the LLM
@@ -58,8 +58,13 @@ export const FinalCond3 = ({ initLoading }: FinalCond3Props) => {
             // Append the latest user query
             const userMessage = { role: "user", content: query };
 
+            const latestSystemMessage = {
+                role: "system",
+                content: "This was the conversation history so far. You are tasked to respond to the user's query based on the conversation history and the article provided. Please provide a detailed and accurate response to the user's query. If relevant, refer directly to sections of the article. If the information is not available in the article, use your general knowledge to help the user effectively."
+            };
+
             // Combine all messages into a single array
-            const messages = [systemMessage, ...historyMessages, userMessage];
+            const messages = [systemMessage, ...historyMessages, latestSystemMessage, userMessage];
 
             return axios.post(`${baseUrl}/api/users/query`, {
                 model: "llama3.1",
