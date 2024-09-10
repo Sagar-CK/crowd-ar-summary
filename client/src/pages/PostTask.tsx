@@ -6,6 +6,7 @@ import { baseUrl } from "../utils/Helper";
 
 const PostTask = ({condition}: {condition: number}) => {
     const [continueButton, setContinueButton] = useState(true);
+    const [continueToPostSurvey, setContinueToPostSurvey] = useState(false);
 
     const [searchParams, _setSearchParams] = useSearchParams();
     const prolificID = searchParams.get("prolificID");
@@ -34,6 +35,25 @@ const PostTask = ({condition}: {condition: number}) => {
             window.removeEventListener('message', handleSurveyCompletion);
         };
     }, []);
+
+    if(!continueToPostSurvey){
+        return (
+            <div className="flex flex-col h-full w-full justify-center items-center gap-8">
+                <h1 className="text-2xl font-bold">
+                Congrats for finishing the task! 🥳
+                </h1>
+                <p>
+                    Now we would like to ask you some questions about the task you just completed. 
+                </p>
+                <p>
+                Click the button below to continue to the post-task questionnaires.
+                </p>
+                <button className="transition-all bg-blue-500 text-white py-2 px-4 rounded mt-4 text-sm" onClick={() => setContinueToPostSurvey(true)}>
+                    Continue to  Questionnaires
+                </button>
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col h-full w-full justify-center items-center">
