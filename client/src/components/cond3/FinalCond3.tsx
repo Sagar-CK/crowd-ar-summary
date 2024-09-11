@@ -127,10 +127,10 @@ export const FinalCond3 = ({ queryState, setQueryState }: FinalCond3Props) => {
 
     // Scroll to bottom when data changes (new interactions)
     useEffect(() => {
-        if (!queryState.loading && conversationEndRef.current) {
+        if (!userQueryState.loading && conversationEndRef.current) {
             conversationEndRef.current.scrollIntoView({ behavior: "smooth" });
         }
-    }, [data, queryState.loading]); // Dependencies include data and loading state
+    }, [data, userQueryState]); // Dependencies include data and loading state
 
     const handleQuerySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -194,10 +194,20 @@ export const FinalCond3 = ({ queryState, setQueryState }: FinalCond3Props) => {
     return (
         <div className="flex h-full w-full justify-center items-start overflow-x-hidden text-sm">
             <div className="flex h-full w-full">
-                <div id='article-container' className="flex flex-col justify-start items-center w-1/3 h-full text-wrap p-4">
-                    <div className="flex flex-col items-center p-4 bg-gray-200 drop-shadow-md rounded-xl overflow-auto">
-                        <h1 className="font-semibold text-xl">Article</h1>
-                        <p>{data.article}</p>
+                <div id="data-container" className="h-full w-1/3 flex-row items-center justify-center gap-x-4">
+                    <div id='human-summary-container' className="flex flex-col justify-start items-center  w-full h-1/3 text-wrap p-4">
+                        <div className="flex flex-col items-center p-4 bg-amber-200 drop-shadow-md rounded-xl overflow-auto">
+                            <h1 className="font-semibold text-xl">Original Summary</h1>
+                            <p className="overflow-y-auto">
+                                {data.initialSummary}
+                            </p>
+                        </div>
+                    </div>
+                    <div id='article-container' className="flex flex-col justify-start items-center w-full h-2/3 text-wrap p-4">
+                        <div className="flex flex-col items-center p-4 bg-gray-200 drop-shadow-md rounded-xl overflow-auto">
+                            <h1 className="font-semibold text-xl">Article</h1>
+                            <p className="overflow-y-auto">{data.article}</p>
+                        </div>
                     </div>
                 </div>
                 <div id="summary-submission-container" className="flex flex-col justify-center w-2/3 h-full">

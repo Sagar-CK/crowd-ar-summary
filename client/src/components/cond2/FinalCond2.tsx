@@ -122,7 +122,7 @@ export const FinalCond2 = ({ queryState, setQueryState }: FinalCond2Props) => {
                 <div id='article-container' className="flex flex-col justify-start items-center w-1/3 h-full text-wrap p-4">
                     <div className="flex flex-col items-center p-4 bg-gray-200 rounded-xl overflow-auto ">
                         <h1 className="font-semibold text-xl">Article</h1>
-                        <p>
+                        <p className="overflow-y-auto">
                             {data.article}
                         </p>
                     </div>
