@@ -57,7 +57,7 @@ const PostTask = ({condition}: {condition: number}) => {
 
     return (
         <div className="flex flex-col h-full w-full justify-center items-center">
-            <iframe src={`https://tudelft.fra1.qualtrics.com/jfe/form/SV_3PGMt9ubq6gbHIG?${prolificID!}`} className="h-5/6 w-full"></iframe>
+            <iframe src={`https://tudelft.fra1.qualtrics.com/jfe/form/SV_3PGMt9ubq6gbHIG?prolificID=${prolificID!}`} className="h-5/6 w-full"></iframe>
             <button id="submit-button" disabled={continueButton} className="transition-all bg-blue-500 text-white py-2 px-4 rounded mt-4 disabled:bg-gray-500 text-sm" onClick={
                 () => {
                     completeTask.mutate({prolificID: prolificID!}, {onSuccess:() => queryClient.invalidateQueries({queryKey: [`cond${condition}`]})});
