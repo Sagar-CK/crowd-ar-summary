@@ -48,7 +48,7 @@ export const InitCond3 = ({ queryState, setQueryState }: InitCond3Props) => {
                 messages: [
                     {
                         role: "user",
-                        content: `Summarize the following text in 100-150 words: ${data.article}  Ensure the summary captures the main points and key details.  Format your response as: SUMMARY: <your summary here>`
+                        content: `Summarize the following text in 100-150 words: ${data.article}. This was my summary: ${data.initialSummary}. Ensure the summary captures the main points and key details.  Format your response as: SUMMARY: <your summary here>`
                     }
                 ],
                 stream: false,
