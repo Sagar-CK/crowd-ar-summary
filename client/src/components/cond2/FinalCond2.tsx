@@ -38,9 +38,13 @@ export const FinalCond2 = ({ queryState, setQueryState }: FinalCond2Props) => {
                 model: "llama3.1",
                 messages: [
                     {
+                        role: "system",
+                        content: "Format your response as: SUMMARY: <your summary here>"
+                    },
+                    {
                         role: "user",
-                        content: `Summarize the following text in 100-150 words: ${data.article}. This was my summary: ${data.initialSummary}. Ensure the summary captures the main points and key details.  Format your response as: SUMMARY: <your summary here>`
-                    }
+                        content: `Summarize the following text in 100-150 words: ${data.article}. This was my summary: ${data.initialSummary}. Ensure the summary captures the main points and key details.`
+                    },
                 ],
                 stream: false,
             })
@@ -135,7 +139,7 @@ export const FinalCond2 = ({ queryState, setQueryState }: FinalCond2Props) => {
                                 <p className="overflow-y-auto">
                                     {queryState.loading ? <LoadingOutlined /> : data.llmSummary}
                                 </p>
-                                {!data.llmSummary || !queryState.loading && queryState.error ? <>
+                                {!queryState.loading && !data.llmSummary || !queryState.loading && queryState.error ? <>
                                     <div className="text-red-500 text-lg font-semibold w-full h-full flex items-center flex-col justify-evenly">
                                         <p>
                                             We failed to fetch the LLM summary! Please try again.
