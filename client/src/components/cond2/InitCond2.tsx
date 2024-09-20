@@ -52,6 +52,10 @@ export const InitCond2 = ({queryState, setQueryState}: InitCond2Props) => {
                         role: "user",
                         content: `Summarize the following text in 100-150 words: ${data.article}. This was my summary: ${data.initialSummary}. Ensure the summary captures the main points and key details.`
                     },
+                    {
+                        role: "user",
+                        content: "Format your response as: SUMMARY: <your summary here>. Return only the summary in the response."
+                    }
                 ],
                 stream: false,
             })
@@ -110,7 +114,7 @@ export const InitCond2 = ({queryState, setQueryState}: InitCond2Props) => {
     return (
         <div className="flex flex-col h-full w-full justify-start items-center gap-y-4 overflow-x-hidden text-sm">
             <div id="summary-article-container" className="flex justify-center w-5/6 h-2/3 gap-x-4">
-                <div id='article-container' className="flex flex-col justify-start items-center bg-gray-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
+                <div id='article-container' className="flex flex-col justify-start items-center bg-[#38a3a5] rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                     <h1 className="font-semibold text-xl">Article</h1>
                     <p className="overflow-y-auto">
                         {data.article}

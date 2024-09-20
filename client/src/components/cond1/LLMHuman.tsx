@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "antd";
+import { RobotOutlined } from "@ant-design/icons";
 
 export const LLMHuman = () => {
     const [summary, setSummary] = useState("");
