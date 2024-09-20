@@ -113,7 +113,7 @@ export const InitCond3 = ({ queryState, setQueryState }: InitCond3Props) => {
     return (
         <div className="flex flex-col h-full w-full justify-start items-center gap-y-4 overflow-x-hidden text-sm">
             <div id="summary-article-container" className="flex justify-center w-5/6 h-2/3 gap-x-4">
-                <div id='article-container' className="flex flex-col justify-start items-center bg-gray-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
+                <div id='article-container' className="flex flex-col justify-start items-center bg-[#38a3a5] rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                     <h1 className="font-semibold text-xl">Article</h1>
                     <p className="overflow-y-auto">
                         {data.article}

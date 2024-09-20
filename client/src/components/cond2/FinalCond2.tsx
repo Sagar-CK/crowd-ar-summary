@@ -31,6 +31,7 @@ export const FinalCond2 = ({ queryState, setQueryState }: FinalCond2Props) => {
             return await res.json();
         }
     })
+    // setQueryState({ loading: true, error: false });
 
     const createLLMSummary = useMutation({
         mutationFn: () => {
@@ -128,7 +129,7 @@ export const FinalCond2 = ({ queryState, setQueryState }: FinalCond2Props) => {
             <div className="flex h-full w-full">
 
                 <div id='article-container' className="flex flex-col justify-start items-center w-1/3 h-full text-wrap p-4">
-                    <div className="flex flex-col items-center p-4 bg-gray-200 rounded-xl overflow-auto ">
+                    <div className="flex flex-col items-center p-4 bg-[#38a3a5] rounded-xl overflow-auto ">
                         <h1 className="font-semibold text-xl">Article</h1>
                         <p className="overflow-y-auto">
                             {data.article}
@@ -137,9 +138,9 @@ export const FinalCond2 = ({ queryState, setQueryState }: FinalCond2Props) => {
                 </div>
                 <div id="summary-submission-container" className="flex flex-col justify-center w-2/3 h-full">
                     <div className="flex flex-col items-center justify-start gap-y-4 p-4 h-full rounded-xl overflow-auto ">
-                        <div id="summary-container" className="flex h-auto gap-x-4">
-                            <div id='summary-container' className="flex flex-col justify-start items-center bg-green-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
-                                <h1 className="font-semibold text-xl">{<RobotOutlined />} CondenseCrew Summary</h1>
+                        <div id="summary-container" className="flex gap-x-4 h-2/3">
+                            <div id='summary-container' className="flex flex-col justify-start items-center bg-[#57cc99] rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
+                                <h1 className="font-semibold text-xl">CondenseCrew Summary {<RobotOutlined />}</h1>
                                 <p className="overflow-y-auto">
                                     {queryState.loading ? <LoadingOutlined /> : data.llmSummary}
                                 </p>
@@ -160,7 +161,7 @@ export const FinalCond2 = ({ queryState, setQueryState }: FinalCond2Props) => {
                                 </>
                                     : null}
                             </div>
-                            <div id='human-summary-container' className="flex flex-col justify-start items-center bg-amber-200 rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
+                            <div id='human-summary-container' className="flex flex-col justify-start items-center bg-[#5393ec] rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                                 <h1 className="font-semibold text-xl">Original Summary</h1>
                                 <p className="overflow-y-auto">
                                     {data.initialSummary}

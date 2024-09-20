@@ -203,18 +203,18 @@ export const FinalCond3 = ({ queryState, setQueryState }: FinalCond3Props) => {
         <div className="flex h-full w-full justify-center items-start overflow-x-hidden text-sm">
             <div className="flex h-full w-full">
                 <div id="data-container" className="h-full w-1/3 flex-row items-center justify-center gap-x-4">
+                    <div id='article-container' className="flex flex-col justify-start items-center w-full h-2/3 text-wrap p-4">
+                        <div className="flex flex-col items-center p-4 bg-[#38a3a5] drop-shadow-md rounded-xl overflow-auto">
+                            <h1 className="font-semibold text-xl">Article</h1>
+                            <p className="overflow-y-auto">{data.article}</p>
+                        </div>
+                    </div>
                     <div id='human-summary-container' className="flex flex-col justify-start items-center  w-full h-1/3 text-wrap p-4">
-                        <div className="flex flex-col items-center p-4 bg-amber-200 drop-shadow-md rounded-xl overflow-auto">
+                        <div className="flex flex-col items-center p-4 bg-[#5393ec] drop-shadow-md rounded-xl overflow-auto">
                             <h1 className="font-semibold text-xl">Original Summary</h1>
                             <p className="overflow-y-auto">
                                 {data.initialSummary}
                             </p>
-                        </div>
-                    </div>
-                    <div id='article-container' className="flex flex-col justify-start items-center w-full h-2/3 text-wrap p-4">
-                        <div className="flex flex-col items-center p-4 bg-gray-200 drop-shadow-md rounded-xl overflow-auto">
-                            <h1 className="font-semibold text-xl">Article</h1>
-                            <p className="overflow-y-auto">{data.article}</p>
                         </div>
                     </div>
                 </div>

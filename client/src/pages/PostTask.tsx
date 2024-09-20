@@ -49,7 +49,7 @@ const PostTask = ({condition}: {condition: number}) => {
                 Click the button below to continue to the post-task questionnaires.
                 </p>
                 <button className="transition-all bg-blue-500 text-white py-2 px-4 rounded mt-4 text-sm" onClick={() => setContinueToPostSurvey(true)}>
-                    Continue to  Questionnaires
+                    Continue to Questionnaires
                 </button>
             </div>
         )

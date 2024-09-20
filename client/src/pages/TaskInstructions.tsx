@@ -13,7 +13,7 @@ const TaskInstructions = ({ condition }: { condition: number }) => {
                             article and capture the main points and essential information of the text while maintaining clarity and
                             coherence.  </p>
                         <p>
-                            Alongside the article, you will have access to an AI generated summary by CondenseCrew <RobotOutlined /> (a LLM) which you can use to develop your summary, if you wish.
+                            Alongside the article, you will have access to an AI generated summary by CondenseCrew <RobotOutlined /> which you can use to develop your summary, if you wish.
                         </p>
                     </div>
                 )}
@@ -24,7 +24,7 @@ const TaskInstructions = ({ condition }: { condition: number }) => {
                             article and capture the main points and essential information of the text while maintaining clarity and
                             coherence.  </p>
                             <p>
-                                Once you have completed your initial summary, you will have access to an AI generated summary by CondenseCrew <RobotOutlined /> (a LLM) which you can use to develop your summary, if you wish.
+                                Once you have completed your initial summary, you will have access to an AI generated summary by CondenseCrew <RobotOutlined /> which you can use to develop your summary, if you wish.
                             </p>
                             <p>
                                 Note, there might be a delay in generating the AI summary by CondenseCrew, please be patient. This is denoted by <LoadingOutlined />.
@@ -38,7 +38,7 @@ const TaskInstructions = ({ condition }: { condition: number }) => {
                             article and capture the main points and essential information of the text while maintaining clarity and
                             coherence.  </p>
                             <p>
-                                Once you have completed your initial summary, you will have access to CondenseCrew <Avatar icon={<RobotOutlined />} /> (a LLM) which you can chat with in order to develop your summary.
+                                Once you have completed your initial summary, you will have access to CondenseCrew <Avatar icon={<RobotOutlined />} /> which you can chat with in order to develop your summary.
                             </p>
                         <p>
                             Note, the first message to CondenseCrew is a prompt set by us to get you started with an initial summary and is denoted through <Avatar icon={<AuditOutlined />} />.

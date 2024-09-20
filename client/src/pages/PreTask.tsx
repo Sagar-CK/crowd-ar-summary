@@ -103,7 +103,7 @@ const PreTask = ({ condition }: { condition: number }) => {
     
     <div className="flex flex-col w-full h-full items-center gap-y-4 overflow-auto">
       
-      <h1 className="font-semibold text-2xl">Human and LLM Collaboration in Text Summarization Tasks</h1>
+      <h1 className="font-semibold text-2xl">Human and AI Collaboration in Text Summarization Tasks</h1>
       <p className="text-wrap max-w-screen-lg align-top text-sm">
         We are a group of researchers at the Technical University of Delft
         (Delft University of Technology) in the Netherlands. In this
