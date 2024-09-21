@@ -206,7 +206,11 @@ export const FinalCond3 = ({ queryState, setQueryState }: FinalCond3Props) => {
                     <div id='article-container' className="flex flex-col justify-start items-center w-full h-2/3 text-wrap p-4">
                         <div className="flex flex-col items-center p-4 bg-[#38a3a5] drop-shadow-md rounded-xl overflow-auto">
                             <h1 className="font-semibold text-xl">Article</h1>
-                            <p className="overflow-y-auto">{data.article}</p>
+                            <p className="overflow-y-auto">
+                                <Markdown>
+                                    {data.article.replaceAll('\n', '&nbsp; \n\n')}
+                                </Markdown>
+                            </p>
                         </div>
                     </div>
                     <div id='human-summary-container' className="flex flex-col justify-start items-center  w-full h-1/3 text-wrap p-4">

@@ -6,6 +6,7 @@ import axios from "axios";
 import { Query } from "../../types/User";
 import { Button } from "antd";
 import { QueryState } from "../../types/QueryState";
+import Markdown from "react-markdown";
 
 type InitCond3Props = {
     queryState: QueryState;
@@ -116,7 +117,9 @@ export const InitCond3 = ({ queryState, setQueryState }: InitCond3Props) => {
                 <div id='article-container' className="flex flex-col justify-start items-center bg-[#38a3a5] rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                     <h1 className="font-semibold text-xl">Article</h1>
                     <p className="overflow-y-auto">
-                        {data.article}
+                        <Markdown>
+                            {data.article.replaceAll('\n', '&nbsp; \n\n')}
+                        </Markdown>
                     </p>
                 </div>
             </div>

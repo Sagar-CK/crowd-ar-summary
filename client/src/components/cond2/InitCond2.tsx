@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Button } from "antd";
 import { QueryState } from "../../types/QueryState";
+import Markdown from "react-markdown";
 
 type InitCond2Props = {
     queryState: QueryState;
@@ -12,7 +13,7 @@ type InitCond2Props = {
 };
 
 
-export const InitCond2 = ({queryState, setQueryState}: InitCond2Props) => {
+export const InitCond2 = ({ queryState, setQueryState }: InitCond2Props) => {
     const [summary, setSummary] = useState("");
     const [wordCount, setWordCount] = useState(0);
     const queryClient = useQueryClient();
@@ -38,7 +39,7 @@ export const InitCond2 = ({queryState, setQueryState}: InitCond2Props) => {
             return axios.patch(`${baseUrl}/api/users/${prolificID}`, { initialSummary: initialSummary, llmSummary: llmSummary })
         },
     })
-    
+
     const createLLMSummary = useMutation({
         mutationFn: () => {
             return axios.post(`${baseUrl}/api/users/query`, {
@@ -80,7 +81,7 @@ export const InitCond2 = ({queryState, setQueryState}: InitCond2Props) => {
             const llmSummary = await createLLMSummary.mutateAsync();
             // Remove the "SUMMARY: " prefix from the LLM summary if it exists
             const summaryContent = llmSummary.data.message.content.replace("SUMMARY:", "");
-        
+
             // Update with LLM summary
             await addInitialSummary.mutateAsync({ prolificID: prolificID!, initialSummary: summary, llmSummary: summaryContent });
 
@@ -117,7 +118,9 @@ export const InitCond2 = ({queryState, setQueryState}: InitCond2Props) => {
                 <div id='article-container' className="flex flex-col justify-start items-center bg-[#38a3a5] rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                     <h1 className="font-semibold text-xl">Article</h1>
                     <p className="overflow-y-auto">
-                        {data.article}
+                        <Markdown>
+                            {data.article.replaceAll('\n', '&nbsp; \n\n')}
+                        </Markdown>
                     </p>
                 </div>
             </div>

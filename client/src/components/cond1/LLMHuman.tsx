@@ -5,6 +5,7 @@ import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "antd";
 import { RobotOutlined } from "@ant-design/icons";
+import Markdown from "react-markdown";
 
 export const LLMHuman = () => {
     const [summary, setSummary] = useState("");
@@ -74,7 +75,9 @@ export const LLMHuman = () => {
                 <div id='article-container' className="flex flex-col justify-start items-center bg-[#38a3a5] rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">
                     <h1 className="font-semibold text-2xl">Article</h1>
                     <p className="overflow-y-auto">
-                        {data.article}
+                        <Markdown>
+                        {data.article.replaceAll('\n', '&nbsp; \n\n')}
+                        </Markdown>
                     </p>
                 </div>
                 <div id='summary-container' className="flex flex-col justify-start items-center bg-[#57cc99] rounded-xl w-1/2 h-full text-wrap p-4 gap-y-2">

@@ -6,6 +6,7 @@ import { useSearchParams } from "react-router-dom";
 import { Button } from "antd";
 import { LoadingOutlined, RobotOutlined, RollbackOutlined } from "@ant-design/icons";
 import { QueryState } from "../../types/QueryState";
+import Markdown from "react-markdown";
 
 type FinalCond2Props = {
     queryState: QueryState;
@@ -132,7 +133,9 @@ export const FinalCond2 = ({ queryState, setQueryState }: FinalCond2Props) => {
                     <div className="flex flex-col items-center p-4 bg-[#38a3a5] rounded-xl overflow-auto ">
                         <h1 className="font-semibold text-xl">Article</h1>
                         <p className="overflow-y-auto">
-                            {data.article}
+                            <Markdown>
+                                {data.article.replaceAll('\n', '&nbsp; \n\n')}
+                            </Markdown>
                         </p>
                     </div>
                 </div>
