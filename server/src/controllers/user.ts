@@ -106,7 +106,8 @@ export const createUser: RequestHandler<unknown, unknown, CreateUserBody, unknow
             condition: condition,
             article: assignedArticle.article, // Add the assigned article
             articleID: assignedArticle.id,      // Add the article ID
-            llmSummary: llmSummary
+            llmSummary: llmSummary,
+            returned: false,
         });
 
         res.status(201).json(newUser);
@@ -126,6 +127,7 @@ interface UpdateUserBody {
     postTask?: boolean;
     completed?: boolean;
     timedOut?: boolean;
+    returned?: boolean;
     revokedConsent?: boolean;
     initialSummary?: string;
     llmSummary?: string;
@@ -158,6 +160,7 @@ export const updateUser: RequestHandler<UpdateUserParams, unknown, UpdateUserBod
                 postTask: req.body.postTask,
                 completed: req.body.completed,
                 timedOut: req.body.timedOut,
+                returned: req.body.returned,
                 revokedConsent: req.body.revokedConsent,
                 initialSummary: req.body.initialSummary,
                 llmSummary: req.body.llmSummary,
