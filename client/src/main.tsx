@@ -41,10 +41,6 @@ const router = createBrowserRouter([
     </Layout>
   },
   {
-    path: "/completion",
-    element:<Layout><Completion /></Layout> 
-  },
-  {
     path: "/revoked-consent",
     element: <RevokedConsent />
   },
