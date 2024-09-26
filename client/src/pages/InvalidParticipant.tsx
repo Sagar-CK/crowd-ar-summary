@@ -11,7 +11,7 @@ const InvalidParticipant = () => {
             <p>
                 You can click the button below to be redirected to the Prolific platform. If you have any questions, please contact us through the Prolific platform.
             </p>
-            <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=C11QUVXW"}>Go to Prolific</Button>
+            {/* <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=C11QUVXW"}>Go to Prolific</Button> */}
         </div>
     </div>
     );
