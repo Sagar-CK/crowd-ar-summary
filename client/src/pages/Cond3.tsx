@@ -48,7 +48,9 @@ const Cond3 = () => {
     }
 
     if (data.postTask) {
-        return <Completion/>
+        return <Completion
+            condition={3}
+        />
     }
 
     if (data.task) {
