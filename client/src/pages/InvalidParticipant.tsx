@@ -11,13 +11,29 @@ const InvalidParticipant = () => {
     const [searchParams, _setSearchParams] = useSearchParams();
     const navigate = useNavigate();
 
-    const {isPending, data} = useQuery({
+    const {isPending, data, error} = useQuery({
         queryKey: ['layout'],
         queryFn: async () => {
           const res = await fetch(`${baseUrl}/api/users/${searchParams.get("prolificID")}`)
           return await res.json();
         }
       })
+
+    if (isPending) {
+        return (
+          <div className="flex h-full w-full items-center justify-center">
+            Fetching your data!
+          </div>
+        );
+      }
+
+    if (!data || error) {
+        return (
+            <div className="flex h-full w-full items-center justify-center">
+                Something went wrong.
+            </div>
+        );
+    }
       
     return (
         <div className="flex flex-col h-full w-full justify-center items-start">

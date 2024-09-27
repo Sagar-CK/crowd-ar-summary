@@ -1,5 +1,5 @@
 import TUDLogo from "../assets/TUDelft_logo_black.png";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
