@@ -42,12 +42,6 @@ const PreTask = ({ condition }: { condition: number }) => {
     enabled: !!prolificId, // only run query if prolificId is present
   });
 
-  useEffect(() => {
-    if (data && !error && data.condition !== condition && loading) {
-      navigate("/invalid-participant");
-    }
-  }, [data, condition, error, navigate]);
-
   const handleConsentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setConsent(e.target.checked);
   };
@@ -73,13 +67,6 @@ const PreTask = ({ condition }: { condition: number }) => {
     await queryClient.invalidateQueries({ queryKey: ['userDuplicateCheck', prolificId] });
 
     if (error) {
-      setLoading(false);
-      return;
-    }
-
-    // Participant has already completed another condition
-    if (data && data.condition !== condition) {
-      navigate("/invalid-participant");
       setLoading(false);
       return;
     }

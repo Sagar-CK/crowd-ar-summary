@@ -1,6 +1,24 @@
 // import { Button } from "antd";
 
+import { useQuery } from "@tanstack/react-query";
+import { baseUrl } from "../utils/Helper";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Button } from "antd";
+
+
+
 const InvalidParticipant = () => {
+    const [searchParams, _setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
+
+    const {isPending, data} = useQuery({
+        queryKey: ['layout'],
+        queryFn: async () => {
+          const res = await fetch(`${baseUrl}/api/users/${searchParams.get("prolificID")}`)
+          return await res.json();
+        }
+      })
+      
     return (
         <div className="flex flex-col h-full w-full justify-center items-start">
         <div className="flex flex-col w-full h-full items-center justify-center gap-y-4">
@@ -9,9 +27,13 @@ const InvalidParticipant = () => {
             According to our records, you have already participated in this study for <strong>another condition</strong>. If you believe this is an error, please contact us through the Prolific platform.
             </p>
             <p>
-                You can click the button below to be redirected to the Prolific platform. If you have any questions, please contact us through the Prolific platform.
+                You can click the button below to be redirected to the correct condition.
             </p>
-            {/* <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=C11QUVXW"}>Go to Prolific</Button> */}
+            <p>
+                <strong>  If you have already completed the study for this condition at an earlier stage, please return the study on Prolific!</strong>
+            </p>
+            <Button type="primary" onClick={() => navigate(`/cond${data.condition}?prolificID=${data.prolificID}`)}>Go to correct condition</Button>
+            
         </div>
     </div>
     );

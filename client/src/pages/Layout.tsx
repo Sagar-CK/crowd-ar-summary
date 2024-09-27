@@ -8,6 +8,7 @@ import { Button } from "antd";
 import { QuestionCircleOutlined } from "@ant-design/icons";
 import { Modal } from "antd";
 import TaskInstructions from "./TaskInstructions";
+import InvalidParticipant from "./InvalidParticipant";
 
 interface LayoutProps {
   condition?: number;
@@ -38,12 +39,9 @@ const Layout = ({condition, children }: LayoutProps) => {
     }
   })
 
-
-  useEffect(() => {
-    if (data && data.condition !== condition) {
-      navigate('/invalid-participant');
-    }
-  }, [data, condition, navigate]);
+  if(data && data.condition !== condition){
+    return <InvalidParticipant />
+  }
 
   if (isPending) {
     return (

@@ -12,7 +12,6 @@ import Cond3 from './pages/Cond3.tsx';
 import RevokedConsent from './pages/RevokedConsent.tsx';
 import { RedirectToCondition } from './components/RedirectToCondition.tsx';
 import { QueryClient, QueryClientProvider} from '@tanstack/react-query';
-import InvalidParticipant from './pages/InvalidParticipant.tsx';
 
 const queryClient = new QueryClient();
 
@@ -44,8 +43,13 @@ const router = createBrowserRouter([
     element: <RevokedConsent />
   },
   {
-    path: "/invalid-participant",
-    element: <InvalidParticipant />
+    path: "*",
+    element: <>
+    <div className="flex flex-col gap-y-2 h-full w-full items-center justify-center">
+    <h1 className='text-2xl'>404 - Not Found</h1>
+    <p>Contact us on Prolific for support or navigate back to the last valid URL! </p>
+    </div>
+    </>
   }
 ]);
 
