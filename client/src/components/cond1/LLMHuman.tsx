@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { baseUrl, calculateWordCount } from "../../utils/Helper";
+import { baseUrl, calculateWordCount, isValidArticle } from "../../utils/Helper";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
@@ -15,22 +15,16 @@ export const LLMHuman = () => {
 
     const prolificID = searchParams.get("prolificID");
     const addFinalSummary = useMutation({
-        mutationFn: ({prolificID, finalSummary}: {prolificID: string, finalSummary: string}) => {
-          return axios.patch(`${baseUrl}/api/users/${prolificID}`, {finalSummary: finalSummary, task: true})
+        mutationFn: ({ prolificID, finalSummary }: { prolificID: string, finalSummary: string }) => {
+            return axios.patch(`${baseUrl}/api/users/${prolificID}`, { finalSummary: finalSummary, task: true })
         },
-      })
+    })
 
-      
-    useEffect(() => {
-        setWordCount(calculateWordCount(summary))
-    }, [summary]);
-
-
-      const { isPending, error, data } = useQuery({
+    const { isPending, error, data } = useQuery({
         queryKey: ['cond1task'],
         queryFn: async () => {
             try {
-                const res = await fetch(`${baseUrl}/api/users/${prolificID}`)
+                const res = await fetch(`${baseUrl}/api/users/${prolificID}`);
                 return await res.json();
             }
             catch (e) {
@@ -38,6 +32,17 @@ export const LLMHuman = () => {
             }
 
         }
+    })
+
+    useEffect(() => {
+        setWordCount(calculateWordCount(summary))
+    }, [summary]);
+
+
+    const updateUserForValidArticleMutation = useMutation({
+        mutationFn: async ({ prolificID }: { prolificID: string }) => {
+            return axios.patch(`${baseUrl}/api/users/article/${prolificID}`)
+        },
     })
 
 
@@ -57,17 +62,46 @@ export const LLMHuman = () => {
         );
     }
 
+    const getValidArticle = async (e: React.FormEvent) => {
+        e.preventDefault();
 
+        updateUserForValidArticleMutation.mutate({ prolificID: prolificID! }, {
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ['cond1task'] });
+            },
+        });
+    };
+
+
+
+    
     const handleProceed = async (e: React.FormEvent) => {
         e.preventDefault();
-        
-        addFinalSummary.mutate({prolificID: prolificID!, finalSummary: summary}, {
+
+        addFinalSummary.mutate({ prolificID: prolificID!, finalSummary: summary }, {
             onSuccess: () => {
-                queryClient.invalidateQueries({queryKey: ['cond1', prolificID]});
+                queryClient.invalidateQueries({ queryKey: ['cond1', prolificID] });
             }
         })
-      };
+    };
+
     
+    if (!isValidArticle(data.article)) {
+        return (
+            <div className="flex flex-col h-full w-full items-center justify-center gap-y-2">
+                <p>We are still get an available article for you. Please wait!</p>
+                <p>If this is still an issue for more than a minute, please contact us through the Prolific platform!</p>
+
+                <Button
+                    type="primary"
+                    onClick={getValidArticle}
+                >
+                    Refresh
+                </Button>
+
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-full w-full justify-start items-center gap-y-4 overflow-x-hidden text-sm">
@@ -76,7 +110,7 @@ export const LLMHuman = () => {
                     <h1 className="font-semibold text-2xl">Article</h1>
                     <p className="overflow-y-auto">
                         <Markdown>
-                        {data.article.replaceAll('\n', '&nbsp; \n\n')}
+                            {data.article.replaceAll('\n', '&nbsp; \n\n')}
                         </Markdown>
                     </p>
                 </div>

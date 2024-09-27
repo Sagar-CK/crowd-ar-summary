@@ -2,11 +2,11 @@
 Code repository for the experimental design setup for my Bachelor's Honors Project.
 
 # Miscellaneous Notes
-- Send Ujwal Pre-registration and the website
 - Start writing the related work sections and the introduction
+- Add attention check in the middle of the questions. (Answer 4)
 
 # Client TODO
 - 
 
 # Server TODO
-- 
+- Redirect to the condition they were working in, if its the wrong condition

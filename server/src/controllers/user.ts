@@ -103,11 +103,15 @@ export const createUser: RequestHandler<unknown, unknown, CreateUserBody, unknow
         const newUser = await UserModel.create({
             prolificID: prolificID,
             preTask: preTask,
+            task: false,
+            postTask: false,
+            timedOut: false,
             condition: condition,
             article: assignedArticle.article, // Add the assigned article
             articleID: assignedArticle.id,      // Add the article ID
             llmSummary: llmSummary,
             returned: false,
+            revokedConsent: false,
         });
 
         res.status(201).json(newUser);
@@ -214,15 +218,13 @@ export const queryLLM: RequestHandler = async (req, res, next) => {
 
 export const getNextArticle = async (condition: number): Promise<{ id: string; article: string; highlights: string; llm_summary: string;} | null> => {
     try {
-        // Either the field is false or null
         const users = await UserModel.find({
             condition: condition,
-            $or: [
-                { revokedConsent: { $ne: true } },
-                { revokedConsent: { $exists: false } }
+            $nor: [
+                { revokedConsent: true },
+                { returned: true },
             ]
         }).exec();
-        console.log('Users:', users);
 
         const usedArticles = users.map((user) => user.articleID);
 
@@ -231,7 +233,13 @@ export const getNextArticle = async (condition: number): Promise<{ id: string; a
         // console.log('Available articles:', availableArticles);
 
         if (availableArticles.length === 0) {
-            return null;
+            const temp = {
+                id: "NO_ARTICLE_AVAILABLE",
+                article: "NO_ARTICLE_AVAILABLE",
+                highlights: "NO_ARTICLE_AVAILABLE",
+                llm_summary: "NO_ARTICLE_AVAILABLE"
+            }
+            return temp;
         }
 
         return availableArticles[0];
@@ -239,3 +247,43 @@ export const getNextArticle = async (condition: number): Promise<{ id: string; a
         throw error;
     }
 };
+
+export const updateUserIfTheyHaveNoArticle: RequestHandler = async (req, res, next) => {
+    const prolificID = req.params.prolificID;
+    try {
+        const user = await UserModel.findOne({ prolificID: prolificID }).exec();
+        if (!user) {
+            throw createHttpError(400, "User was not found!");
+        }
+
+        if (user.article === "NO_ARTICLE_AVAILABLE") {
+            console.log("Updating user with no article");
+            let assignedArticle = await getNextArticle(user.condition);
+
+            if (assignedArticle.id === "NO_ARTICLE_AVAILABLE") {
+                console.log("No articles available");
+                res.status(200).json({ message: "No articles available" });
+                return;
+            }
+
+            // if condition 1 add the llm summary
+            let llmSummary = "";
+            if (user.condition === 1) {
+                llmSummary = assignedArticle.llm_summary;
+            }
+
+            await UserModel.updateOne(
+                { prolificID: prolificID },
+                {
+                    article: assignedArticle.article,
+                    articleID: assignedArticle.id,
+                    llmSummary: llmSummary,
+                }
+            );
+
+            res.status(200).json({ message: "User updated successfully" });
+        }
+    } catch (error) {
+        throw error;
+    }
+}
