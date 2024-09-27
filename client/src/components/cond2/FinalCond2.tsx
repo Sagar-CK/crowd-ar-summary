@@ -49,7 +49,7 @@ export const FinalCond2 = ({ queryState, setQueryState }: FinalCond2Props) => {
                     },
                     {
                         role: "user",
-                        content: "Format your response as: SUMMARY: <your summary here>. Return only the summary in the response."
+                        content: "Format your 100-150 word response as: SUMMARY: <your summary here>. Return only the summary in the response."
                     }
                 ],
                 stream: false,

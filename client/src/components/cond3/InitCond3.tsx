@@ -71,7 +71,7 @@ export const InitCond3 = ({ queryState, setQueryState }: InitCond3Props) => {
                     },
                     {
                         role: "user",
-                        content: "Format your response as: SUMMARY: <your summary here>. Return only the summary in the response."
+                        content: "Format your 100-150 word response as: SUMMARY: <your summary here>. Return only the summary in the response."
                     }
                 ],
                 stream: false,
