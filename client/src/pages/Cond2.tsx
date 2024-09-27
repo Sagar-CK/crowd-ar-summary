@@ -50,7 +50,7 @@ const Cond2 = () => {
     }
 
     if (data.postTask) {
-        return <Completion/>
+        return <Completion condition={2} />
     }
 
     if (data.task) {

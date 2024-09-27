@@ -11,7 +11,6 @@ import Cond2 from './pages/Cond2.tsx';
 import Cond3 from './pages/Cond3.tsx';
 import RevokedConsent from './pages/RevokedConsent.tsx';
 import { RedirectToCondition } from './components/RedirectToCondition.tsx';
-import Completion from './pages/Completion.tsx';
 import { QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import InvalidParticipant from './pages/InvalidParticipant.tsx';
 
@@ -39,10 +38,6 @@ const router = createBrowserRouter([
     element: <Layout condition={3}>
       <Cond3 />
     </Layout>
-  },
-  {
-    path: "/completion",
-    element:<Layout><Completion /></Layout> 
   },
   {
     path: "/revoked-consent",
