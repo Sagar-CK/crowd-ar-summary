@@ -11,6 +11,7 @@ const userSchema = new mongoose_1.Schema({
     postTask: { type: Boolean },
     completed: { type: Boolean },
     timedOut: { type: Boolean },
+    returned: { type: Boolean },
     revokedConsent: { type: Boolean },
     initialSummary: { type: String },
     llmSummary: { type: String },

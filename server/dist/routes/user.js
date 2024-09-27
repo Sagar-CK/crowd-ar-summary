@@ -30,6 +30,7 @@ const express_1 = __importDefault(require("express"));
 const UserController = __importStar(require("../controllers/user"));
 const userRouter = express_1.default.Router();
 // userRouter.get("/", UserController.getUsers);
+userRouter.patch("/article/:prolificID", UserController.updateUserIfTheyHaveNoArticle);
 userRouter.post("/query", UserController.queryLLM);
 userRouter.get("/:prolificID", UserController.getUser);
 userRouter.post("/", UserController.createUser);

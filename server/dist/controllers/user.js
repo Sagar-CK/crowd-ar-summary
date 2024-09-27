@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getNextArticle = exports.queryLLM = exports.updateUser = exports.createUser = exports.getUser = exports.getUsers = void 0;
+exports.updateUserIfTheyHaveNoArticle = exports.getNextArticle = exports.queryLLM = exports.updateUser = exports.createUser = exports.getUser = exports.getUsers = void 0;
 const user_1 = __importDefault(require("../models/user"));
 const http_errors_1 = __importDefault(require("http-errors"));
 const fs_1 = __importDefault(require("fs"));
@@ -102,10 +102,15 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         const newUser = yield user_1.default.create({
             prolificID: prolificID,
             preTask: preTask,
+            task: false,
+            postTask: false,
+            timedOut: false,
             condition: condition,
             article: assignedArticle.article, // Add the assigned article
             articleID: assignedArticle.id, // Add the article ID
-            llmSummary: llmSummary
+            llmSummary: llmSummary,
+            returned: false,
+            revokedConsent: false,
         });
         res.status(201).json(newUser);
     }
@@ -131,6 +136,7 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             postTask: req.body.postTask,
             completed: req.body.completed,
             timedOut: req.body.timedOut,
+            returned: req.body.returned,
             revokedConsent: req.body.revokedConsent,
             initialSummary: req.body.initialSummary,
             llmSummary: req.body.llmSummary,
@@ -178,20 +184,24 @@ exports.queryLLM = queryLLM;
 // If all articles are used we return null
 const getNextArticle = (condition) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Either the field is false or null
         const users = yield user_1.default.find({
             condition: condition,
-            $or: [
-                { revokedConsent: { $ne: true } },
-                { revokedConsent: { $exists: false } }
+            $nor: [
+                { revokedConsent: true },
+                { returned: true },
             ]
         }).exec();
-        console.log('Users:', users);
         const usedArticles = users.map((user) => user.articleID);
         const availableArticles = articles.filter((article) => !usedArticles.includes(article.id));
         // console.log('Available articles:', availableArticles);
         if (availableArticles.length === 0) {
-            return null;
+            const temp = {
+                id: "NO_ARTICLE_AVAILABLE",
+                article: "NO_ARTICLE_AVAILABLE",
+                highlights: "NO_ARTICLE_AVAILABLE",
+                llm_summary: "NO_ARTICLE_AVAILABLE"
+            };
+            return temp;
         }
         return availableArticles[0];
     }
@@ -200,4 +210,37 @@ const getNextArticle = (condition) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getNextArticle = getNextArticle;
+const updateUserIfTheyHaveNoArticle = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const prolificID = req.params.prolificID;
+    try {
+        const user = yield user_1.default.findOne({ prolificID: prolificID }).exec();
+        if (!user) {
+            throw (0, http_errors_1.default)(400, "User was not found!");
+        }
+        if (user.article === "NO_ARTICLE_AVAILABLE") {
+            console.log("Updating user with no article");
+            let assignedArticle = yield (0, exports.getNextArticle)(user.condition);
+            if (assignedArticle.id === "NO_ARTICLE_AVAILABLE") {
+                console.log("No articles available");
+                res.status(200).json({ message: "No articles available" });
+                return;
+            }
+            // if condition 1 add the llm summary
+            let llmSummary = "";
+            if (user.condition === 1) {
+                llmSummary = assignedArticle.llm_summary;
+            }
+            yield user_1.default.updateOne({ prolificID: prolificID }, {
+                article: assignedArticle.article,
+                articleID: assignedArticle.id,
+                llmSummary: llmSummary,
+            });
+            res.status(200).json({ message: "User updated successfully" });
+        }
+    }
+    catch (error) {
+        throw error;
+    }
+});
+exports.updateUserIfTheyHaveNoArticle = updateUserIfTheyHaveNoArticle;
 //# sourceMappingURL=user.js.map
