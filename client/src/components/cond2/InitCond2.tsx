@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { baseUrl, calculateWordCount } from "../../utils/Helper";
+import { baseUrl, calculateWordCount, isValidArticle } from "../../utils/Helper";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -32,7 +32,21 @@ export const InitCond2 = ({ queryState, setQueryState }: InitCond2Props) => {
         }
     })
 
+    const updateUserForValidArticleMutation = useMutation({
+        mutationFn: async ({ prolificID }: { prolificID: string }) => {
+            return axios.patch(`${baseUrl}/api/users/article/${prolificID}`)
+        },
+    })
 
+    const getValidArticle = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        updateUserForValidArticleMutation.mutate({ prolificID: prolificID! }, {
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ['cond1task'] });
+            },
+        });
+    };
 
     const addInitialSummary = useMutation({
         mutationFn: ({ prolificID, initialSummary, llmSummary }: { prolificID: string, initialSummary: string, llmSummary: string }) => {
@@ -107,6 +121,23 @@ export const InitCond2 = ({ queryState, setQueryState }: InitCond2Props) => {
         return (
             <div className="flex h-full w-full items-center justify-center">
                 Something went wrong.
+            </div>
+        );
+    }
+
+    if (!isValidArticle(data.article)) {
+        return (
+            <div className="flex flex-col h-full w-full items-center justify-center gap-y-2">
+                <p>We are still get an available article for you. Please wait!</p>
+                <p>If this is still an issue for more than a minute, please contact us through the Prolific platform!</p>
+
+                <Button
+                    type="primary"
+                    onClick={getValidArticle}
+                >
+                    Refresh
+                </Button>
+
             </div>
         );
     }
