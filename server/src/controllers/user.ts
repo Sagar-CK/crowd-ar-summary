@@ -223,6 +223,7 @@ export const getNextArticle = async (condition: number): Promise<{ id: string; a
             $nor: [
                 { revokedConsent: true },
                 { returned: true },
+                { timedOut: true }
             ]
         }).exec();
 
