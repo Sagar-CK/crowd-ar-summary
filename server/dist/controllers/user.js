@@ -189,6 +189,7 @@ const getNextArticle = (condition) => __awaiter(void 0, void 0, void 0, function
             $nor: [
                 { revokedConsent: true },
                 { returned: true },
+                { timedOut: true }
             ]
         }).exec();
         const usedArticles = users.map((user) => user.articleID);
