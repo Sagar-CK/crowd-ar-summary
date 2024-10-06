@@ -12,16 +12,20 @@ const articles: { id: string; article: string; highlights: string; llm_summary: 
 
 const loadDataset = async () => {
     return new Promise<void>((resolve, reject) => {
+        let count = 0;
         fs.createReadStream(datasetPath)
             .pipe(csv())
             .on('data', (row) => {
-                // Push each row to the articles array
-                articles.push({
-                    id: row.id,
-                    article: row.article,
-                    highlights: row.highlights,
-                    llm_summary: row.llm_summary
-                });
+                if (count < 24) {
+                    // Push each row to the articles array
+                    articles.push({
+                        id: row.id,
+                        article: row.article,
+                        highlights: row.highlights,
+                        llm_summary: row.llm_summary
+                    });
+                    count++;
+                }
             })
             .on('end', () => {
                 resolve();

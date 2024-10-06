@@ -148,6 +148,7 @@ const PreTask = ({ condition }: { condition: number }) => {
             onChange={handleProlificIdChange}
             placeholder="e.g., 5e8f8c48e4b0a2d1a7d9e6b7"
             value={prolificId}
+            maxLength={24}
           />
         </label>
         {errorMessage && <span className="text-red-500 text-sm font-semibold">{errorMessage}</span>}
