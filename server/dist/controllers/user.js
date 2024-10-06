@@ -24,16 +24,20 @@ const datasetPath = path_1.default.join(__dirname, '../data/articles_summary.csv
 const articles = [];
 const loadDataset = () => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise((resolve, reject) => {
+        let count = 0;
         fs_1.default.createReadStream(datasetPath)
             .pipe((0, csv_parser_1.default)())
             .on('data', (row) => {
-            // Push each row to the articles array
-            articles.push({
-                id: row.id,
-                article: row.article,
-                highlights: row.highlights,
-                llm_summary: row.llm_summary
-            });
+            if (count < 24) {
+                // Push each row to the articles array
+                articles.push({
+                    id: row.id,
+                    article: row.article,
+                    highlights: row.highlights,
+                    llm_summary: row.llm_summary
+                });
+                count++;
+            }
         })
             .on('end', () => {
             resolve();
