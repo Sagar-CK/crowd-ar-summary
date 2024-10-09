@@ -15,12 +15,12 @@ const Completion = ({condition}: CompletionProps) => {
                 <p>
                     You can now click the button below to be redirected to the Prolific platform and receive compensation. If you have any questions, please contact us through the Prolific platform.
                 </p>
-                {/*  Cond1: https://app.prolific.com/submissions/complete?cc=CF32RB7P */}
-                {/* Cond2 : https://app.prolific.com/submissions/complete?cc=C1DK7UVS */}
-                {/* Cond3: https://app.prolific.com/submissions/complete?cc=C7S1IME9 */}
-                {condition === 1 && <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=CF32RB7P"}>Go to Prolific</Button>}
-                {condition === 2 && <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=C1DK7UVS"}>Go to Prolific</Button>}
-                {condition === 3 && <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=C7S1IME9"}>Go to Prolific</Button>}
+                {/*  Cond1: https://app.prolific.com/submissions/complete?cc=CAZPA5TO */}
+                {/* Cond2 : https://app.prolific.com/submissions/complete?cc=C61OZ3EH */}
+                {/* Cond3: https://app.prolific.com/submissions/complete?cc=C1EQE3KR */}
+                {condition === 1 && <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=CAZPA5TO"}>Go to Prolific</Button>}
+                {condition === 2 && <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=C61OZ3EH"}>Go to Prolific</Button>}
+                {condition === 3 && <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=C1EQE3KR"}>Go to Prolific</Button>}
             </div>
         </div>
     );

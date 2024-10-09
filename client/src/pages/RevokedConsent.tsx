@@ -15,7 +15,7 @@ const RevokedConsent = () => {;
                 <p>
                     You can click the button below to be redirected to the Prolific Platform to be compensated. If you have any questions, please contact us through the Prolific platform.
                 </p>
-                <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=C1CCE19H"}>Go to Prolific</Button>
+                <Button type='primary' onClick={() => window.location.href = "https://app.prolific.com/submissions/complete?cc=CRDEVPW0"}>Go to Prolific</Button>
             </div>
         </div>
     );
