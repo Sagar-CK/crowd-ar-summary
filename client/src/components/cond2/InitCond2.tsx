@@ -128,7 +128,7 @@ export const InitCond2 = ({ queryState, setQueryState }: InitCond2Props) => {
     if (!isValidArticle(data.article)) {
         return (
             <div className="flex flex-col h-full w-full items-center justify-center gap-y-2">
-                <p>We are still get an available article for you. Please wait!</p>
+                <p>We are still getting an available article for you. Please wait!</p>
                 <p>If this is still an issue for more than a minute, please contact us through the Prolific platform!</p>
 
                 <Button
