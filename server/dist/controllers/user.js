@@ -160,19 +160,13 @@ const getNextArticle = (condition) => __awaiter(void 0, void 0, void 0, function
         // Find available articles that haven't been assigned
         let availableArticle = undefined;
         if (condition === 1) {
-            availableArticle = yield article_1.default.findOne({
-                assigned_1: false,
-            }).exec();
+            availableArticle = yield article_1.default.findOneAndUpdate({ assigned_1: false }, { assigned_1: true }, { new: true }).exec();
         }
         if (condition === 2) {
-            availableArticle = yield article_1.default.findOne({
-                assigned_2: false,
-            }).exec();
+            availableArticle = yield article_1.default.findOneAndUpdate({ assigned_2: false }, { assigned_2: true }, { new: true }).exec();
         }
         if (condition === 3) {
-            availableArticle = yield article_1.default.findOne({
-                assigned_3: false,
-            }).exec();
+            availableArticle = yield article_1.default.findOneAndUpdate({ assigned_3: false }, { assigned_3: true }, { new: true }).exec();
         }
         if (!availableArticle) {
             return {
@@ -181,16 +175,6 @@ const getNextArticle = (condition) => __awaiter(void 0, void 0, void 0, function
                 highlights: "NO_ARTICLE_AVAILABLE",
                 llm_summary: "NO_ARTICLE_AVAILABLE",
             };
-        }
-        if (condition === 1) {
-            // If condition 1 add the llm summary
-            availableArticle.assigned_1 = true;
-        }
-        if (condition === 2) {
-            availableArticle.assigned_2 = true;
-        }
-        if (condition === 3) {
-            availableArticle.assigned_3 = true;
         }
         yield availableArticle.save();
         return {

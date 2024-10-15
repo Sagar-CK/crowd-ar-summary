@@ -261,41 +261,35 @@ export const getNextArticle = async (
         // Find available articles that haven't been assigned
         let availableArticle = undefined;
         if (condition === 1) {
-            availableArticle = await ArticleModel.findOne({
-                assigned_1: false,
-            }).exec();
+            availableArticle = await ArticleModel.findOneAndUpdate(
+            { assigned_1: false },
+            { assigned_1: true },
+            { new: true }
+            ).exec();
         }
         if (condition === 2) {
-            availableArticle = await ArticleModel.findOne({
-                assigned_2: false,
-            }).exec();
+            availableArticle = await ArticleModel.findOneAndUpdate(
+            { assigned_2: false },
+            { assigned_2: true },
+            { new: true }
+            ).exec();
         }
         if (condition === 3) {
-            availableArticle = await ArticleModel.findOne({
-                assigned_3: false,
-            }).exec();
+            availableArticle = await ArticleModel.findOneAndUpdate(
+            { assigned_3: false },
+            { assigned_3: true },
+            { new: true }
+            ).exec();
         }
 
         if (!availableArticle) {
             return {
-                id: "NO_ARTICLE_AVAILABLE",
-                article: "NO_ARTICLE_AVAILABLE",
-                highlights: "NO_ARTICLE_AVAILABLE",
-                llm_summary: "NO_ARTICLE_AVAILABLE",
+            id: "NO_ARTICLE_AVAILABLE",
+            article: "NO_ARTICLE_AVAILABLE",
+            highlights: "NO_ARTICLE_AVAILABLE",
+            llm_summary: "NO_ARTICLE_AVAILABLE",
             };
         }
-
-        if (condition === 1) {
-            // If condition 1 add the llm summary
-            availableArticle.assigned_1 = true;
-        }
-        if (condition === 2) {
-            availableArticle.assigned_2 = true;
-        }
-        if (condition === 3) {
-            availableArticle.assigned_3 = true;
-        }
-
         
         await availableArticle.save();
 
