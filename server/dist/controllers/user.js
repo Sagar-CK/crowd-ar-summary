@@ -63,9 +63,6 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         }
         // Assign the next available article
         const assignedArticle = yield (0, exports.getNextArticle)(condition);
-        if (!assignedArticle || assignedArticle.id === "NO_ARTICLE_AVAILABLE") {
-            throw (0, http_errors_1.default)(500, "No articles available");
-        }
         // Create new user within transaction
         const newUser = yield user_1.default.create([
             {

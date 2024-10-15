@@ -116,9 +116,6 @@ export const createUser: RequestHandler<
 
         // Assign the next available article
         const assignedArticle = await getNextArticle(condition);
-        if (!assignedArticle || assignedArticle.id === "NO_ARTICLE_AVAILABLE") {
-            throw createHttpError(500, "No articles available");
-        }
 
         // Create new user within transaction
         const newUser = await UserModel.create(
