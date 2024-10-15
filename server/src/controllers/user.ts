@@ -1,42 +1,38 @@
 import { RequestHandler } from "express";
 import UserModel from "../models/user";
 import createHttpError from "http-errors";
-import fs from "fs";
-import path from "path";
-import csv from "csv-parser";
-import mongoose from "mongoose";
+import fs from 'fs';
+import path from 'path';
+import csv from 'csv-parser';
+import mongoose from 'mongoose';
+
 
 // Load and parse the dataset
-const datasetPath = path.join(__dirname, "../data/articles_summary.csv");
+const datasetPath = path.join(__dirname, '../data/articles_summary.csv');
 // Initialize dataset and used articles
-const articles: {
-    id: string;
-    article: string;
-    highlights: string;
-    llm_summary: string;
-}[] = [];
+const articles: { id: string; article: string; highlights: string; llm_summary: string;}[] = [];
 
 const loadDataset = async () => {
     return new Promise<void>((resolve, reject) => {
         let count = 0;
         fs.createReadStream(datasetPath)
             .pipe(csv())
-            .on("data", (row) => {
+            .on('data', (row) => {
                 if (count < 24) {
                     // Push each row to the articles array
                     articles.push({
                         id: row.id,
                         article: row.article,
                         highlights: row.highlights,
-                        llm_summary: row.llm_summary,
+                        llm_summary: row.llm_summary
                     });
                     count++;
                 }
             })
-            .on("end", () => {
+            .on('end', () => {
                 resolve();
             })
-            .on("error", (error) => {
+            .on('error', (error) => {
                 reject(error);
             });
     });
@@ -46,16 +42,17 @@ const loadDataset = async () => {
 (async () => {
     try {
         await loadDataset();
-        console.log("Dataset loaded successfully");
+        console.log('Dataset loaded successfully');
     } catch (error) {
-        console.error("Error loading dataset:", error);
+        console.error('Error loading dataset:', error);
     }
 })();
 
+
 interface CreateUserBody {
-    prolificID?: string;
-    condition?: number;
-    preTask: boolean;
+    prolificID?: string,
+    condition?: number,
+    preTask: boolean,
 }
 
 export const getUsers: RequestHandler = async (req, res, next) => {
@@ -65,90 +62,79 @@ export const getUsers: RequestHandler = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-};
+}
 
 export const getUser: RequestHandler = async (req, res, next) => {
     const prolificID = req.params.prolificID;
     try {
         const user = await UserModel.findOne({
-            prolificID: prolificID,
-        });
+            prolificID: prolificID
+        })
 
-        if (!user) createHttpError(400, "User was not found!");
+        if (!user) createHttpError(400, "User was not found!")
 
         res.status(200).json(user);
     } catch (error) {
         next(error);
     }
-};
+}
 
-export const createUser: RequestHandler<
-    unknown,
-    unknown,
-    CreateUserBody,
-    unknown
-> = async (req, res, next) => {
-    const prolificID = req.body.prolificID;
-    const preTask = req.body.preTask;
-    const condition = req.body.condition;
-
-    const session = await mongoose.startSession(); // Start a MongoDB session for transaction
+export const createUser: RequestHandler<unknown, unknown, CreateUserBody, unknown> = async (req, res, next) => {
+    const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
+        const prolificID = req.body.prolificID;
+        const preTask = req.body.preTask;
+        const condition = req.body.condition;
+
         if (!prolificID) {
             throw createHttpError(400, "User needs a prolificID!");
         }
 
         // Check if the user already exists
-        const user = await UserModel.findOne({ prolificID: prolificID }).exec();
+        const user = await UserModel.findOne({ prolificID }).session(session).exec();
         if (user) {
-            await session.commitTransaction();
+            await session.abortTransaction();
             session.endSession();
             return res.status(200).json(user); // User already exists
         }
 
-        // Assign the next available article inside the transaction
-        const assignedArticle = await getNextArticle(condition, session);
-
-        // If condition 1, add the llm summary
-        let llmSummary = "";
-        if (condition === 1) {
-            llmSummary = assignedArticle.llm_summary;
+        // Assign the next available article
+        const assignedArticle = await getNextArticle(condition);
+        if (!assignedArticle || assignedArticle.id === "NO_ARTICLE_AVAILABLE") {
+            throw createHttpError(500, "No articles available");
         }
 
-        // Create new user within the transaction
-        const newUser = await UserModel.create(
-            [
-                {
-                    prolificID: prolificID,
-                    preTask: preTask,
-                    task: false,
-                    postTask: false,
-                    timedOut: false,
-                    condition: condition,
-                    article: assignedArticle.article, // Add the assigned article
-                    articleID: assignedArticle.id, // Add the article ID
-                    llmSummary: llmSummary,
-                    returned: false,
-                    revokedConsent: false,
-                },
-            ],
-            { session }
-        );
+        // Create new user within transaction
+        const newUser = await UserModel.create([{
+            prolificID,
+            preTask,
+            task: false,
+            postTask: false,
+            timedOut: false,
+            condition,
+            article: assignedArticle.article,
+            articleID: assignedArticle.id,
+            llmSummary: condition === 1 ? assignedArticle.llm_summary : '',
+            returned: false,
+            revokedConsent: false,
+        }], { session });
 
-        await session.commitTransaction(); // Commit the transaction if everything is successful
+        await session.commitTransaction();
+        session.endSession();
+
         res.status(201).json(newUser);
     } catch (error) {
-        await session.abortTransaction(); // Abort transaction in case of error
-        next(error);
-    } finally {
+        await session.abortTransaction();
         session.endSession();
+        next(error);
     }
-};
+}
+
 
 interface UpdateUserParams {
-    prolificID: string;
+    prolificID: string,
 }
 
 interface UpdateUserBody {
@@ -169,14 +155,9 @@ interface UpdateUserBody {
 type Query = {
     query: string;
     response: string;
-};
+}
 
-export const updateUser: RequestHandler<
-    UpdateUserParams,
-    unknown,
-    UpdateUserBody,
-    unknown
-> = async (req, res, next) => {
+export const updateUser: RequestHandler<UpdateUserParams, unknown, UpdateUserBody, unknown> = async (req, res, next) => {
     const prolificID = req.params.prolificID;
     const finalSummary = req.body.finalSummary;
 
@@ -187,9 +168,8 @@ export const updateUser: RequestHandler<
 
         // Use updateOne with a filter and an update object
         const result = await UserModel.updateOne(
-            { prolificID: prolificID }, // Filter to find the document to update
-            {
-                // Update object with the fields to update
+            { prolificID: prolificID },  // Filter to find the document to update
+            {   // Update object with the fields to update
                 finalSummary: finalSummary,
                 articleID: req.body.articleID,
                 preTask: req.body.preTask,
@@ -224,12 +204,13 @@ export const queryLLM: RequestHandler = async (req, res, next) => {
         }
 
         const response = await fetch(url, {
-            method: "POST",
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify(req.body),
         });
+
 
         if (!response.ok) {
             throw createHttpError(500, "Error querying LLM");
@@ -240,7 +221,7 @@ export const queryLLM: RequestHandler = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-};
+}
 
 // For a user's condition we need to fetch the next usable article.
 // We retrieve all the users for a condition and store their article IDs
@@ -248,37 +229,32 @@ export const queryLLM: RequestHandler = async (req, res, next) => {
 // We then find the first article that is not in the list of used articles
 // If all articles are used we return null
 
-export const getNextArticle = async (
-    condition: number,
-    session: mongoose.ClientSession
-): Promise<{
-    id: string;
-    article: string;
-    highlights: string;
-    llm_summary: string;
-} | null> => {
+export const getNextArticle = async (condition: number): Promise<{ id: string; article: string; highlights: string; llm_summary: string;} | null> => {
     // eslint-disable-next-line no-useless-catch
     try {
         const users = await UserModel.find({
             condition: condition,
-            $nor: [{ revokedConsent: true }, { returned: true }, { timedOut: true }],
-        })
-            .session(session)
-            .exec();
+            $nor: [
+                { revokedConsent: true },
+                { returned: true },
+                { timedOut: true }
+            ]
+        }).exec();
 
         const usedArticles = users.map((user) => user.articleID);
 
-        const availableArticles = articles.filter(
-            (article) => !usedArticles.includes(article.id)
-        );
+        const availableArticles = articles.filter((article) => !usedArticles.includes(article.id));
+
+        // console.log('Available articles:', availableArticles);
 
         if (availableArticles.length === 0) {
-            return {
+            const temp = {
                 id: "NO_ARTICLE_AVAILABLE",
                 article: "NO_ARTICLE_AVAILABLE",
                 highlights: "NO_ARTICLE_AVAILABLE",
-                llm_summary: "NO_ARTICLE_AVAILABLE",
-            };
+                llm_summary: "NO_ARTICLE_AVAILABLE"
+            }
+            return temp;
         }
 
         return availableArticles[0];
@@ -288,15 +264,9 @@ export const getNextArticle = async (
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const updateUserIfTheyHaveNoArticle: RequestHandler = async (
-    req,
-    res,
-    next
-) => {
+export const updateUserIfTheyHaveNoArticle: RequestHandler = async (req, res, next) => {
     const prolificID = req.params.prolificID;
-    const session = await mongoose.startSession(); // Start a MongoDB session for transaction
-    session.startTransaction();
-
+    // eslint-disable-next-line no-useless-catch
     try {
         const user = await UserModel.findOne({ prolificID: prolificID }).exec();
         if (!user) {
@@ -305,7 +275,7 @@ export const updateUserIfTheyHaveNoArticle: RequestHandler = async (
 
         if (user.article === "NO_ARTICLE_AVAILABLE") {
             console.log("Updating user with no article");
-            const assignedArticle = await getNextArticle(user.condition, session);
+            const assignedArticle = await getNextArticle(user.condition);
 
             if (assignedArticle.id === "NO_ARTICLE_AVAILABLE") {
                 console.log("No articles available");
@@ -331,9 +301,6 @@ export const updateUserIfTheyHaveNoArticle: RequestHandler = async (
             res.status(200).json({ message: "User updated successfully" });
         }
     } catch (error) {
-        await session.abortTransaction(); // Abort transaction in case of error
-        next(error);
-    } finally {
-        session.endSession();
+        throw error;
     }
-};
+}
