@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express, { NextFunction, Request, Response } from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 import userRouter from "./routes/user";
 import createHttpError, {isHttpError} from "http-errors";
@@ -19,7 +19,7 @@ app.use((req, res, next) => {
     next(createHttpError(404, "Endpoint not found: " + req.path));
 })
 
-app.use((error: unknown, req: Request, res: Response, next: NextFunction) =>{
+app.use((error: unknown, req: Request, res: Response) =>{
     console.log(error);
     let errorMsg = "An unknown error occured!";
     let statusCode = 500;

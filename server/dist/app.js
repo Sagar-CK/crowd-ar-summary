@@ -41,7 +41,7 @@ app.use("/api/users", user_1.default);
 app.use((req, res, next) => {
     next((0, http_errors_1.default)(404, "Endpoint not found: " + req.path));
 });
-app.use((error, req, res, next) => {
+app.use((error, req, res) => {
     console.log(error);
     let errorMsg = "An unknown error occured!";
     let statusCode = 500;

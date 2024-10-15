@@ -18,8 +18,9 @@ const http_errors_1 = __importDefault(require("http-errors"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const csv_parser_1 = __importDefault(require("csv-parser"));
+const mongoose_1 = __importDefault(require("mongoose"));
 // Load and parse the dataset
-const datasetPath = path_1.default.join(__dirname, '../data/articles_summary.csv');
+const datasetPath = path_1.default.join(__dirname, "../data/articles_summary.csv");
 // Initialize dataset and used articles
 const articles = [];
 const loadDataset = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -27,22 +28,22 @@ const loadDataset = () => __awaiter(void 0, void 0, void 0, function* () {
         let count = 0;
         fs_1.default.createReadStream(datasetPath)
             .pipe((0, csv_parser_1.default)())
-            .on('data', (row) => {
+            .on("data", (row) => {
             if (count < 24) {
                 // Push each row to the articles array
                 articles.push({
                     id: row.id,
                     article: row.article,
                     highlights: row.highlights,
-                    llm_summary: row.llm_summary
+                    llm_summary: row.llm_summary,
                 });
                 count++;
             }
         })
-            .on('end', () => {
+            .on("end", () => {
             resolve();
         })
-            .on('error', (error) => {
+            .on("error", (error) => {
             reject(error);
         });
     });
@@ -51,10 +52,10 @@ const loadDataset = () => __awaiter(void 0, void 0, void 0, function* () {
 (() => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield loadDataset();
-        console.log('Dataset loaded successfully');
+        console.log("Dataset loaded successfully");
     }
     catch (error) {
-        console.error('Error loading dataset:', error);
+        console.error("Error loading dataset:", error);
     }
 }))();
 const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -71,7 +72,7 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
     const prolificID = req.params.prolificID;
     try {
         const user = yield user_1.default.findOne({
-            prolificID: prolificID
+            prolificID: prolificID,
         });
         if (!user)
             (0, http_errors_1.default)(400, "User was not found!");
@@ -86,6 +87,8 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     const prolificID = req.body.prolificID;
     const preTask = req.body.preTask;
     const condition = req.body.condition;
+    const session = yield mongoose_1.default.startSession(); // Start a MongoDB session for transaction
+    session.startTransaction();
     try {
         if (!prolificID) {
             throw (0, http_errors_1.default)(400, "User needs a prolificID!");
@@ -93,33 +96,42 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         // Check if the user already exists
         const user = yield user_1.default.findOne({ prolificID: prolificID }).exec();
         if (user) {
+            yield session.commitTransaction();
+            session.endSession();
             return res.status(200).json(user); // User already exists
         }
-        // Assign the next available article
-        let assignedArticle = yield (0, exports.getNextArticle)(condition);
-        // if condition 1 add the llm summary
+        // Assign the next available article inside the transaction
+        const assignedArticle = yield (0, exports.getNextArticle)(condition, session);
+        // If condition 1, add the llm summary
         let llmSummary = "";
         if (condition === 1) {
             llmSummary = assignedArticle.llm_summary;
         }
-        // Create new user
-        const newUser = yield user_1.default.create({
-            prolificID: prolificID,
-            preTask: preTask,
-            task: false,
-            postTask: false,
-            timedOut: false,
-            condition: condition,
-            article: assignedArticle.article, // Add the assigned article
-            articleID: assignedArticle.id, // Add the article ID
-            llmSummary: llmSummary,
-            returned: false,
-            revokedConsent: false,
-        });
+        // Create new user within the transaction
+        const newUser = yield user_1.default.create([
+            {
+                prolificID: prolificID,
+                preTask: preTask,
+                task: false,
+                postTask: false,
+                timedOut: false,
+                condition: condition,
+                article: assignedArticle.article, // Add the assigned article
+                articleID: assignedArticle.id, // Add the article ID
+                llmSummary: llmSummary,
+                returned: false,
+                revokedConsent: false,
+            },
+        ], { session });
+        yield session.commitTransaction(); // Commit the transaction if everything is successful
         res.status(201).json(newUser);
     }
     catch (error) {
+        yield session.abortTransaction(); // Abort transaction in case of error
         next(error);
+    }
+    finally {
+        session.endSession();
     }
 });
 exports.createUser = createUser;
@@ -133,6 +145,7 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         // Use updateOne with a filter and an update object
         const result = yield user_1.default.updateOne({ prolificID: prolificID }, // Filter to find the document to update
         {
+            // Update object with the fields to update
             finalSummary: finalSummary,
             articleID: req.body.articleID,
             preTask: req.body.preTask,
@@ -164,9 +177,9 @@ const queryLLM = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             throw (0, http_errors_1.default)(500, "LLM_API_URL is not set");
         }
         const response = yield fetch(url, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify(req.body),
         });
@@ -186,27 +199,24 @@ exports.queryLLM = queryLLM;
 // We exclude users that have revoked consent or have timed out
 // We then find the first article that is not in the list of used articles
 // If all articles are used we return null
-const getNextArticle = (condition) => __awaiter(void 0, void 0, void 0, function* () {
+const getNextArticle = (condition, session) => __awaiter(void 0, void 0, void 0, function* () {
+    // eslint-disable-next-line no-useless-catch
     try {
         const users = yield user_1.default.find({
             condition: condition,
-            $nor: [
-                { revokedConsent: true },
-                { returned: true },
-                { timedOut: true }
-            ]
-        }).exec();
+            $nor: [{ revokedConsent: true }, { returned: true }, { timedOut: true }],
+        })
+            .session(session)
+            .exec();
         const usedArticles = users.map((user) => user.articleID);
         const availableArticles = articles.filter((article) => !usedArticles.includes(article.id));
-        // console.log('Available articles:', availableArticles);
         if (availableArticles.length === 0) {
-            const temp = {
+            return {
                 id: "NO_ARTICLE_AVAILABLE",
                 article: "NO_ARTICLE_AVAILABLE",
                 highlights: "NO_ARTICLE_AVAILABLE",
-                llm_summary: "NO_ARTICLE_AVAILABLE"
+                llm_summary: "NO_ARTICLE_AVAILABLE",
             };
-            return temp;
         }
         return availableArticles[0];
     }
@@ -215,8 +225,11 @@ const getNextArticle = (condition) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getNextArticle = getNextArticle;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const updateUserIfTheyHaveNoArticle = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const prolificID = req.params.prolificID;
+    const session = yield mongoose_1.default.startSession(); // Start a MongoDB session for transaction
+    session.startTransaction();
     try {
         const user = yield user_1.default.findOne({ prolificID: prolificID }).exec();
         if (!user) {
@@ -224,7 +237,7 @@ const updateUserIfTheyHaveNoArticle = (req, res, next) => __awaiter(void 0, void
         }
         if (user.article === "NO_ARTICLE_AVAILABLE") {
             console.log("Updating user with no article");
-            let assignedArticle = yield (0, exports.getNextArticle)(user.condition);
+            const assignedArticle = yield (0, exports.getNextArticle)(user.condition, session);
             if (assignedArticle.id === "NO_ARTICLE_AVAILABLE") {
                 console.log("No articles available");
                 res.status(200).json({ message: "No articles available" });
@@ -244,7 +257,11 @@ const updateUserIfTheyHaveNoArticle = (req, res, next) => __awaiter(void 0, void
         }
     }
     catch (error) {
-        throw error;
+        yield session.abortTransaction(); // Abort transaction in case of error
+        next(error);
+    }
+    finally {
+        session.endSession();
     }
 });
 exports.updateUserIfTheyHaveNoArticle = updateUserIfTheyHaveNoArticle;
