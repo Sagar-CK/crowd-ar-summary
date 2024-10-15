@@ -1,58 +1,65 @@
 import { RequestHandler } from "express";
 import UserModel from "../models/user";
+import ArticleModel from "../models/article";
 import createHttpError from "http-errors";
-import fs from 'fs';
-import path from 'path';
-import csv from 'csv-parser';
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 
-// Load and parse the dataset
-const datasetPath = path.join(__dirname, '../data/articles_summary.csv');
-// Initialize dataset and used articles
-const articles: { id: string; article: string; highlights: string; llm_summary: string;}[] = [];
+// import fs from "fs";
+// import path from "path";
+// import csv from "csv-parser";
+// // Load and parse the dataset
+// const datasetPath = path.join(__dirname, "../data/articles_summary.csv");
 
-const loadDataset = async () => {
-    return new Promise<void>((resolve, reject) => {
-        let count = 0;
-        fs.createReadStream(datasetPath)
-            .pipe(csv())
-            .on('data', (row) => {
-                if (count < 24) {
-                    // Push each row to the articles array
-                    articles.push({
-                        id: row.id,
-                        article: row.article,
-                        highlights: row.highlights,
-                        llm_summary: row.llm_summary
-                    });
-                    count++;
-                }
-            })
-            .on('end', () => {
-                resolve();
-            })
-            .on('error', (error) => {
-                reject(error);
-            });
-    });
-};
+// const loadDataset = async () => {
+//     return new Promise<void>((resolve, reject) => {
+//         fs.createReadStream(datasetPath)
+//             .pipe(csv())
+//             .on("data", async (row) => {
+//                 try {
+//                     // check if db already has the article
+//                     if (await ArticleModel.exists({ id: row.id })) {
+//                         console.log("Article already exists:", row.id);
+//                     } else {
+//                         await ArticleModel.create({
+//                             id: row.id,
+//                             article: row.article,
+//                             highlights: row.highlights,
+//                             llm_summary: row.llm_summary,   
+//                             assigned_1: true,
+//                             assigned_2: false,
+//                             assigned_3: false,
+//                         });
+//                         console.log("Article saved:", row.id);
+//                     }
+//                 } catch (error) {
+//                     // Handle error if it already exists or something goes wrong
+//                     console.error("Error saving article:", error);
+//                 }
+//             })
+//             .on("end", () => {
+//                 resolve();
+//             })
+//             .on("error", (error) => {
+//                 reject(error);
+//             });
+//     });
+// };
 
-// Initialize the dataset
-(async () => {
-    try {
-        await loadDataset();
-        console.log('Dataset loaded successfully');
-    } catch (error) {
-        console.error('Error loading dataset:', error);
-    }
-})();
-
+// // Initialize the dataset
+// (async () => {
+//     try {
+//         await loadDataset();
+//         console.log("Dataset loaded successfully");
+//     } catch (error) {
+//         console.error("Error loading dataset:", error);
+//     }
+// })();
 
 interface CreateUserBody {
-    prolificID?: string,
-    condition?: number,
-    preTask: boolean,
+    prolificID?: string;
+    condition?: number;
+    preTask: boolean;
 }
 
 export const getUsers: RequestHandler = async (req, res, next) => {
@@ -62,24 +69,29 @@ export const getUsers: RequestHandler = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}
+};
 
 export const getUser: RequestHandler = async (req, res, next) => {
     const prolificID = req.params.prolificID;
     try {
         const user = await UserModel.findOne({
-            prolificID: prolificID
-        })
+            prolificID: prolificID,
+        });
 
-        if (!user) createHttpError(400, "User was not found!")
+        if (!user) createHttpError(400, "User was not found!");
 
         res.status(200).json(user);
     } catch (error) {
         next(error);
     }
-}
+};
 
-export const createUser: RequestHandler<unknown, unknown, CreateUserBody, unknown> = async (req, res, next) => {
+export const createUser: RequestHandler<
+    unknown,
+    unknown,
+    CreateUserBody,
+    unknown
+> = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -93,7 +105,9 @@ export const createUser: RequestHandler<unknown, unknown, CreateUserBody, unknow
         }
 
         // Check if the user already exists
-        const user = await UserModel.findOne({ prolificID }).session(session).exec();
+        const user = await UserModel.findOne({ prolificID })
+            .session(session)
+            .exec();
         if (user) {
             await session.abortTransaction();
             session.endSession();
@@ -107,19 +121,24 @@ export const createUser: RequestHandler<unknown, unknown, CreateUserBody, unknow
         }
 
         // Create new user within transaction
-        const newUser = await UserModel.create([{
-            prolificID,
-            preTask,
-            task: false,
-            postTask: false,
-            timedOut: false,
-            condition,
-            article: assignedArticle.article,
-            articleID: assignedArticle.id,
-            llmSummary: condition === 1 ? assignedArticle.llm_summary : '',
-            returned: false,
-            revokedConsent: false,
-        }], { session });
+        const newUser = await UserModel.create(
+            [
+                {
+                    prolificID,
+                    preTask,
+                    task: false,
+                    postTask: false,
+                    timedOut: false,
+                    condition,
+                    article: assignedArticle.article,
+                    articleID: assignedArticle.id,
+                    llmSummary: condition === 1 ? assignedArticle.llm_summary : "",
+                    returned: false,
+                    revokedConsent: false,
+                },
+            ],
+            { session }
+        );
 
         await session.commitTransaction();
         session.endSession();
@@ -130,11 +149,10 @@ export const createUser: RequestHandler<unknown, unknown, CreateUserBody, unknow
         session.endSession();
         next(error);
     }
-}
-
+};
 
 interface UpdateUserParams {
-    prolificID: string,
+    prolificID: string;
 }
 
 interface UpdateUserBody {
@@ -155,9 +173,14 @@ interface UpdateUserBody {
 type Query = {
     query: string;
     response: string;
-}
+};
 
-export const updateUser: RequestHandler<UpdateUserParams, unknown, UpdateUserBody, unknown> = async (req, res, next) => {
+export const updateUser: RequestHandler<
+    UpdateUserParams,
+    unknown,
+    UpdateUserBody,
+    unknown
+> = async (req, res, next) => {
     const prolificID = req.params.prolificID;
     const finalSummary = req.body.finalSummary;
 
@@ -168,8 +191,9 @@ export const updateUser: RequestHandler<UpdateUserParams, unknown, UpdateUserBod
 
         // Use updateOne with a filter and an update object
         const result = await UserModel.updateOne(
-            { prolificID: prolificID },  // Filter to find the document to update
-            {   // Update object with the fields to update
+            { prolificID: prolificID }, // Filter to find the document to update
+            {
+                // Update object with the fields to update
                 finalSummary: finalSummary,
                 articleID: req.body.articleID,
                 preTask: req.body.preTask,
@@ -204,13 +228,12 @@ export const queryLLM: RequestHandler = async (req, res, next) => {
         }
 
         const response = await fetch(url, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify(req.body),
         });
-
 
         if (!response.ok) {
             throw createHttpError(500, "Error querying LLM");
@@ -221,50 +244,80 @@ export const queryLLM: RequestHandler = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}
+};
 
 // For a user's condition we need to fetch the next usable article.
 // We retrieve all the users for a condition and store their article IDs
 // We exclude users that have revoked consent or have timed out
 // We then find the first article that is not in the list of used articles
 // If all articles are used we return null
-
-export const getNextArticle = async (condition: number): Promise<{ id: string; article: string; highlights: string; llm_summary: string;} | null> => {
+export const getNextArticle = async (
+    condition: number
+): Promise<{
+    id: string;
+    article: string;
+    highlights: string;
+    llm_summary: string;
+} | null> => {
     // eslint-disable-next-line no-useless-catch
     try {
-        const users = await UserModel.find({
-            condition: condition,
-            $nor: [
-                { revokedConsent: true },
-                { returned: true },
-                { timedOut: true }
-            ]
-        }).exec();
+        // Find available articles that haven't been assigned
+        let availableArticle = undefined;
+        if (condition === 1) {
+            availableArticle = await ArticleModel.findOne({
+                assigned_1: false,
+            }).exec();
+        }
+        if (condition === 2) {
+            availableArticle = await ArticleModel.findOne({
+                assigned_2: false,
+            }).exec();
+        }
+        if (condition === 3) {
+            availableArticle = await ArticleModel.findOne({
+                assigned_3: false,
+            }).exec();
+        }
 
-        const usedArticles = users.map((user) => user.articleID);
-
-        const availableArticles = articles.filter((article) => !usedArticles.includes(article.id));
-
-        // console.log('Available articles:', availableArticles);
-
-        if (availableArticles.length === 0) {
-            const temp = {
+        if (!availableArticle) {
+            return {
                 id: "NO_ARTICLE_AVAILABLE",
                 article: "NO_ARTICLE_AVAILABLE",
                 highlights: "NO_ARTICLE_AVAILABLE",
-                llm_summary: "NO_ARTICLE_AVAILABLE"
-            }
-            return temp;
+                llm_summary: "NO_ARTICLE_AVAILABLE",
+            };
         }
 
-        return availableArticles[0];
+        if (condition === 1) {
+            // If condition 1 add the llm summary
+            availableArticle.assigned_1 = true;
+        }
+        if (condition === 2) {
+            availableArticle.assigned_2 = true;
+        }
+        if (condition === 3) {
+            availableArticle.assigned_3 = true;
+        }
+
+        
+        await availableArticle.save();
+
+        return {
+            id: availableArticle.id,
+            article: availableArticle.article,
+            highlights: availableArticle.highlights,
+            llm_summary: availableArticle.llm_summary,
+        };
     } catch (error) {
         throw error;
     }
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const updateUserIfTheyHaveNoArticle: RequestHandler = async (req, res, next) => {
+export const updateUserIfTheyHaveNoArticle: RequestHandler = async (
+    req,
+    res,
+) => {
     const prolificID = req.params.prolificID;
     // eslint-disable-next-line no-useless-catch
     try {
@@ -303,4 +356,4 @@ export const updateUserIfTheyHaveNoArticle: RequestHandler = async (req, res, ne
     } catch (error) {
         throw error;
     }
-}
+};
